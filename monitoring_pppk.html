@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoring Kedisiplinan PPPK Paruh Waktu — Bidang Bina Marga DPUPR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#f2f1ea;
+  --surface:#ffffff;
+  --ink:#1e2833;
+  --muted:#5c6673;
+  --line:#dcd7c9;
+  --line-soft:#e9e5d8;
+  --navy:#1c3d5c;
+  --navy-dark:#122b41;
+  --navy-tint:#e8eef3;
+  --green:#3c7a5b;
+  --green-tint:#e5f0ea;
+  --amber:#b8862a;
+  --amber-tint:#faf0dd;
+  --orange:#bd5a29;
+  --orange-tint:#fbebe0;
+  --red:#a8382f;
+  --red-tint:#f8e3e0;
+  --shadow:0 1px 2px rgba(28,61,92,.06), 0 4px 16px rgba(28,61,92,.07);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
+  font-size:14.5px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'IBM Plex Mono',monospace;}
+h1,h2,h3,.display{font-family:'Fraunces',serif;}
+
+/* ---------- Header / road-marking motif ---------- */
+.topbar{
+  background:linear-gradient(180deg,var(--navy) 0%,var(--navy-dark) 100%);
+  color:#f4f1e8;
+  padding:28px 32px 24px;
+  position:relative;
+  overflow:hidden;
+}
+.topbar::after{
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:0;
+  height:6px;
+  background:repeating-linear-gradient(90deg,#e8c15c 0 34px, transparent 34px 58px);
+  opacity:.85;
+}
+.eyebrow{
+  font-size:11.5px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:#c9d6e3;
+  font-weight:600;
+  margin-bottom:6px;
+}
+.topbar h1{
+  margin:0 0 6px;
+  font-size:26px;
+  font-weight:600;
+  letter-spacing:.01em;
+}
+.topbar .sub{
+  color:#cbd8e4;
+  font-size:13.5px;
+  max-width:720px;
+}
+.disclaimer{
+  margin-top:14px;
+  display:inline-flex;
+  align-items:flex-start;
+  gap:8px;
+  background:rgba(232,193,92,.14);
+  border:1px solid rgba(232,193,92,.4);
+  color:#f3e3bb;
+  padding:9px 14px;
+  border-radius:8px;
+  font-size:12.5px;
+  max-width:760px;
+}
+
+/* ---------- Layout ---------- */
+.wrap{max-width:1280px;margin:0 auto;padding:26px 32px 60px;}
+
+/* ---------- Summary cards, sign-shaped badges ---------- */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:14px;
+  margin-bottom:26px;
+}
+.card{
+  background:var(--surface);
+  border:1px solid var(--line-soft);
+  border-radius:12px;
+  padding:16px 16px 14px;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.card .num{font-family:'Fraunces',serif;font-size:30px;font-weight:600;line-height:1;}
+.card .lbl{font-size:12px;color:var(--muted);font-weight:500;}
+.sign{width:20px;height:20px;flex-shrink:0;display:inline-block;}
+.card-top{display:flex;align-items:center;justify-content:space-between;}
+
+.sign-circle{border-radius:50%;background:var(--green);}
+.sign-tri{background:var(--amber);clip-path:polygon(50% 6%,95% 92%,5% 92%);}
+.sign-diamond{background:var(--orange);clip-path:polygon(50% 2%,98% 50%,50% 98%,2% 50%);}
+.sign-octagon{background:var(--red);clip-path:polygon(30% 2%,70% 2%,98% 30%,98% 70%,70% 98%,30% 98%,2% 70%,2% 30%);}
+
+.card.aman{border-color:#cfe1d5;}
+.card.ringan{border-color:#e9d9b6;}
+.card.sedang{border-color:#edcdb8;}
+.card.berat{border-color:#e6bcb7;}
+
+/* ---------- Data bar (download/upload) ---------- */
+.databar{
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+  background:var(--surface);border:1px solid var(--line-soft);border-radius:12px;
+  padding:12px 16px;margin-bottom:14px;box-shadow:var(--shadow);
+}
+.databar-info{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);}
+.databar-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.databar-info.stale .databar-dot{background:var(--amber);}
+.databar-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.upload-msg{
+  border-radius:9px;padding:10px 14px;margin-bottom:14px;font-size:13px;font-weight:500;
+}
+.upload-msg.ok{background:var(--green-tint);color:var(--green);border:1px solid #cfe1d5;}
+.upload-msg.err{background:var(--red-tint);color:var(--red);border:1px solid #e6bcb7;}
+
+/* ---------- Toolbar ---------- */
+.toolbar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin-bottom:16px;
+}
+.toolbar input[type=text], .toolbar select{
+  border:1px solid var(--line);
+  background:var(--surface);
+  border-radius:8px;
+  padding:9px 12px;
+  font-size:13.5px;
+  font-family:inherit;
+  color:var(--ink);
+}
+.toolbar input[type=text]{min-width:230px;flex:1;}
+.toolbar select{cursor:pointer;}
+.chip-btn{
+  border:1px solid var(--line);
+  background:var(--surface);
+  border-radius:8px;
+  padding:9px 13px;
+  font-size:13px;
+  cursor:pointer;
+  color:var(--muted);
+  font-weight:500;
+}
+.chip-btn:hover{border-color:var(--navy);color:var(--navy);}
+.result-count{font-size:12.5px;color:var(--muted);margin-left:auto;white-space:nowrap;}
+
+/* ---------- Table ---------- */
+.tablewrap{
+  background:var(--surface);
+  border:1px solid var(--line-soft);
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{
+  text-align:left;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--muted);
+  background:#faf9f5;
+  padding:11px 12px;
+  border-bottom:1px solid var(--line-soft);
+  cursor:pointer;
+  white-space:nowrap;
+  user-select:none;
+}
+thead th:hover{color:var(--navy);}
+thead th.sorted::after{content:" ▾";}
+tbody td{
+  padding:10px 12px;
+  border-bottom:1px solid #f0eee5;
+  vertical-align:middle;
+}
+tbody tr:hover{background:#fbfaf6;}
+tbody tr:last-child td{border-bottom:none;}
+td.num-cell{font-family:'IBM Plex Mono',monospace;text-align:right;}
+td.nip{font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:12px;}
+.name-cell .jab{display:block;font-size:11.5px;color:var(--muted);margin-top:1px;}
+
+.status-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 10px 4px 6px;border-radius:20px;font-size:11.5px;font-weight:600;
+  white-space:nowrap;
+}
+.status-pill .sign{width:12px;height:12px;}
+.status-pill.aman{background:var(--green-tint);color:var(--green);}
+.status-pill.ringan{background:var(--amber-tint);color:var(--amber);}
+.status-pill.sedang{background:var(--orange-tint);color:var(--orange);}
+.status-pill.berat{background:var(--red-tint);color:var(--red);}
+
+.btn-detail{
+  border:1px solid var(--line);
+  background:var(--surface);
+  border-radius:7px;
+  padding:6px 11px;
+  font-size:12px;
+  cursor:pointer;
+  color:var(--navy);
+  font-weight:600;
+}
+.btn-detail:hover{background:var(--navy-tint);}
+
+/* ---------- Modal ---------- */
+.overlay{
+  position:fixed;inset:0;background:rgba(20,28,36,.5);
+  display:none;align-items:flex-start;justify-content:center;
+  padding:32px 16px;overflow-y:auto;z-index:50;
+}
+.overlay.show{display:flex;}
+.modal{
+  background:var(--surface);
+  border-radius:14px;
+  max-width:760px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+  overflow:hidden;
+  margin-bottom:32px;
+}
+.modal-head{
+  background:var(--navy);color:#fff;
+  padding:20px 26px;
+  display:flex;justify-content:space-between;align-items:flex-start;
+}
+.modal-head h2{margin:0 0 4px;font-size:19px;font-weight:600;}
+.modal-head .meta{font-size:12.5px;color:#c9d6e3;}
+.modal-close{
+  background:rgba(255,255,255,.12);border:none;color:#fff;
+  width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:16px;line-height:1;
+  flex-shrink:0;
+}
+.modal-close:hover{background:rgba(255,255,255,.22);}
+.modal-body{padding:22px 26px 26px;}
+
+.status-banner{
+  border-radius:10px;padding:14px 16px;margin-bottom:20px;
+  display:flex;gap:12px;align-items:flex-start;
+}
+.status-banner .sign{width:26px;height:26px;flex-shrink:0;margin-top:2px;}
+.status-banner.aman{background:var(--green-tint);}
+.status-banner.ringan{background:var(--amber-tint);}
+.status-banner.sedang{background:var(--orange-tint);}
+.status-banner.berat{background:var(--red-tint);}
+.status-banner .t1{font-weight:700;font-size:14.5px;margin-bottom:2px;}
+.status-banner .t2{font-size:12.5px;color:var(--muted);}
+.status-banner.aman .t1{color:var(--green);}
+.status-banner.ringan .t1{color:var(--amber);}
+.status-banner.sedang .t1{color:var(--orange);}
+.status-banner.berat .t1{color:var(--red);}
+
+.stat-grid{
+  display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:22px;
+}
+.stat-box{
+  border:1px solid var(--line-soft);border-radius:8px;padding:9px 4px;text-align:center;
+}
+.stat-box .v{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;}
+.stat-box .k{font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.03em;}
+.stat-box.flag{background:var(--red-tint);border-color:#e6bcb7;}
+.stat-box.flag .v{color:var(--red);}
+
+.section-title{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;margin:0 0 10px;}
+.doclist{display:grid;gap:8px;}
+.doc-item{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  border:1px solid var(--line);border-radius:9px;padding:11px 14px;
+  cursor:pointer;background:#fff;
+}
+.doc-item:hover{border-color:var(--navy);background:var(--navy-tint);}
+.doc-item .dname{font-weight:600;font-size:13.5px;}
+.doc-item .dsub{font-size:11.5px;color:var(--muted);margin-top:1px;}
+.doc-item .darrow{color:var(--navy);font-size:14px;}
+.doc-item.disabled{opacity:.4;cursor:not-allowed;}
+.doc-item.disabled:hover{border-color:var(--line);background:#fff;}
+.note-box{
+  font-size:12px;color:var(--muted);background:#faf9f5;border:1px dashed var(--line);
+  border-radius:8px;padding:10px 12px;margin-top:14px;
+}
+
+/* ---------- Document editor ---------- */
+.doc-toolbar{display:flex;gap:8px;justify-content:flex-end;padding:14px 26px;border-top:1px solid var(--line-soft);background:#faf9f5;}
+.btn{
+  border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;
+}
+.btn-primary{background:var(--navy);color:#fff;}
+.btn-primary:hover{background:var(--navy-dark);}
+.btn-ghost{background:#fff;border-color:var(--line);color:var(--ink);}
+.btn-ghost:hover{border-color:var(--navy);color:var(--navy);}
+
+.docsheet{
+  background:#fff;border:1px solid var(--line-soft);border-radius:10px;
+  padding:34px 38px;font-family:'Times New Roman',Times,serif;font-size:13.5px;line-height:1.65;color:#111;
+  max-height:60vh;overflow-y:auto;
+}
+.docsheet h3{text-align:center;font-family:inherit;font-size:14px;margin:2px 0;text-decoration:underline;}
+.docsheet .center{text-align:center;}
+.docsheet .kop{text-align:center;margin-bottom:16px;}
+.docsheet .kop .k1{font-weight:bold;font-size:14px;}
+.docsheet table.fld{width:100%;border-collapse:collapse;margin:10px 0;}
+.docsheet table.fld td{padding:2px 4px;vertical-align:top;}
+.docsheet table.fld td.lbl{width:150px;}
+.docsheet .fillable{
+  border-bottom:1px dotted #999;background:#fff9e8;padding:0 3px;
+  min-width:60px;display:inline-block;
+}
+.docsheet .fillable:empty::before{content:"…isi disini…";color:#b8a35a;font-style:italic;}
+.docsheet .indent{margin-left:24px;}
+.docsheet ol, .docsheet ul{margin:6px 0;padding-left:22px;}
+.docsheet .sig{margin-top:26px;}
+.docsheet .sig .place{margin-bottom:44px;}
+
+@media print{
+  html, body{height:auto !important; overflow:visible !important; background:#fff !important;}
+  body > *{display:none !important;}
+  #printRoot{
+    display:block !important; position:static !important;
+    visibility:visible !important; height:auto !important; overflow:visible !important;
+  }
+  #printRoot .docsheet{
+    max-height:none; overflow:visible; border:none; border-radius:0;
+    box-shadow:none; padding:10mm 14mm; margin:0;
+  }
+  @page{ margin:12mm; }
+}
+
+.formrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.formrow label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
+.formrow input{width:100%;border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-size:13px;font-family:inherit;}
+
+footer.appfoot{text-align:center;color:var(--muted);font-size:11.5px;padding:20px 0 8px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap" style="padding:0;">
+    <div class="eyebrow">Bidang Bina Marga · DPUPR Kabupaten Karanganyar</div>
+    <h1>Monitoring Kedisiplinan Kehadiran PPPK Paruh Waktu</h1>
+    <div class="sub">Rekap presensi Januari–Juni 2026 · disusun mengacu pada Peraturan Bupati Karanganyar No. 32 Tahun 2023 tentang Disiplin PPPK dan Keputusan Kepala BKPSDM No. 860/28 Tahun 2023 (Juknis).</div>
+    <div class="disclaimer">⚠ Klasifikasi pada halaman ini bersifat <strong>pemantauan berjalan (running monitoring)</strong> berdasarkan akumulasi 6 bulan berjalan, <strong>bukan keputusan hukuman disiplin final</strong>. Ambang batas Pasal 9/10/11 dihitung atas akumulasi hari Alpa dalam 1 (satu) tahun takwim — penjatuhan hukuman final ditetapkan pada akhir tahun takwim berjalan.</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="cards" id="cards"></div>
+
+  <div class="databar">
+    <div class="databar-info">
+      <span class="databar-dot"></span>
+      <span id="dataStatusText">Data Pegawai Pemerintah dengan Perjanjian Kerja (PPPK) Paruh Waktu</span>
+    </div>
+    <div class="databar-actions">
+      <button class="chip-btn" id="btnDownload">⬇ Unduh Excel</button>
+      <button class="chip-btn" id="btnUploadTrigger">⬆ Unggah Excel (update data)</button>
+      <input type="file" id="fileUpload" accept=".xlsx,.xls" style="display:none;">
+    </div>
+  </div>
+  <div id="uploadMsg" class="upload-msg" style="display:none;"></div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Cari nama atau NIP…">
+    <select id="filterJabatan"><option value="">Semua Jabatan</option></select>
+    <select id="filterStatus">
+      <option value="">Semua Status</option>
+      <option value="aman">Aman</option>
+      <option value="ringan">Ringan</option>
+      <option value="sedang">Sedang</option>
+      <option value="berat">Berat</option>
+    </select>
+    <button class="chip-btn" id="resetBtn">Reset filter</button>
+    <span class="result-count" id="resultCount"></span>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th data-k="no" style="width:44px;">No</th>
+          <th data-k="nama">Nama Pegawai</th>
+          <th data-k="H" style="text-align:right;">H</th>
+          <th data-k="A" style="text-align:right;" class="sorted">Alpa</th>
+          <th data-k="T" style="text-align:right;">Terlambat (hr)</th>
+          <th data-k="terlambat_menit" style="text-align:right;">Terlambat (Menit)</th>
+          <th data-k="status">Status Pemantauan</th>
+          <th style="width:90px;">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <footer class="appfoot">Sumber data: Rekap_Presensi_PPPK_PW_Jan-Juni_2026_DPUPR · Dasar hukum: PerBup Karanganyar No. 32/2023 &amp; KepKa BKPSDM No. 860/28/2023</footer>
+</div>
+
+<!-- ============ DETAIL MODAL ============ -->
+<div class="overlay" id="overlay">
+  <div class="modal" id="modalDetail">
+    <div class="modal-head">
+      <div>
+        <h2 id="mNama">—</h2>
+        <div class="meta" id="mMeta">—</div>
+      </div>
+      <button class="modal-close" id="closeModal">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+<!-- ============ DOCUMENT MODAL ============ -->
+<div class="overlay" id="overlayDoc">
+  <div class="modal" id="modalDoc" style="max-width:840px;">
+    <div class="modal-head">
+      <div>
+        <h2 id="dTitle">—</h2>
+        <div class="meta" id="dMeta">—</div>
+      </div>
+      <button class="modal-close" id="closeDocModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="dForm"></div>
+      <div class="section-title" style="margin-top:6px;">Pratinjau Dokumen</div>
+      <div class="docsheet" id="docsheet"></div>
+    </div>
+    <div class="doc-toolbar">
+      <button class="btn btn-ghost" id="backToDetail">← Kembali ke rincian pegawai</button>
+      <button class="btn btn-primary" id="printDoc">Cetak / Simpan PDF</button>
+    </div>
+  </div>
+</div>
+
+<div id="printRoot" style="display:none;"></div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const DEFAULT_DATA = [{"no": 1, "nip": "199706212025211049", "nama": "ABDURRAHMAN RIZAL ARROSYID", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 603, "pulang_cepat_menit": 0, "H": 99, "A": 7, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 5, "DL": 1, "TK": 0, "T": 13, "PC": 0, "TAP": 4}, {"no": 2, "nip": "199512052025211051", "nama": "ADHI PRASETYO, S.H.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 49, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 5, "DL": 0, "TK": 0, "T": 20, "PC": 0, "TAP": 2}, {"no": 3, "nip": "199112152025211077", "nama": "ADI DWI SUSANTO, S.Pd", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 34, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 7, "DL": 0, "TK": 0, "T": 6, "PC": 0, "TAP": 2}, {"no": 4, "nip": "198712272025211100", "nama": "ADI PURWANTO, A.Md.", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 1, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 5, "nip": "198804272025211089", "nama": "ADI RIYANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 110, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 1, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 6, "nip": "197012312025211262", "nama": "ADI TARNO", "jabatan": "PENGELOLA UMUM OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 4, "DL": 2, "TK": 0, "T": 0, "PC": 0, "TAP": 2}, {"no": 7, "nip": "198305232025211068", "nama": "AGUNG WIBOWO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 514, "pulang_cepat_menit": 0, "H": 100, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 8, "DL": 3, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 8, "nip": "198102052025211059", "nama": "AGUS ANANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 25, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 0, "DL": 5, "TK": 0, "T": 3, "PC": 0, "TAP": 1}, {"no": 9, "nip": "199309042025211070", "nama": "AGUS PURWANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 199, "pulang_cepat_menit": 0, "H": 99, "A": 2, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 8, "DL": 2, "TK": 0, "T": 26, "PC": 0, "TAP": 1}, {"no": 10, "nip": "198308052025211073", "nama": "AGUS SAMIJO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 3, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 11, "nip": "199208022025211077", "nama": "AGUS SARWANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 4, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 12, "nip": "198108092025211046", "nama": "AGUS SUHEDI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 46, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 3, "DL": 1, "TK": 0, "T": 10, "PC": 0, "TAP": 1}, {"no": 13, "nip": "196903262025211009", "nama": "AGUS SUSLADI, SHS", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 14, "nip": "199708112025212054", "nama": "AGUSTINA DYAH PURNAMASARI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 2, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 5, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 15, "nip": "199904152025211046", "nama": "AHMAD FATHONI AKBAR", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 59, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 16, "nip": "198910082025211081", "nama": "AHMADI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 529, "pulang_cepat_menit": 0, "H": 112, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 0, "DL": 0, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 17, "nip": "199206282025211065", "nama": "ALBERTHUS OCKY YUWANTARA", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 18, "nip": "199505112025211056", "nama": "ANANDA ARIABIMA", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 3443, "pulang_cepat_menit": 0, "H": 97, "A": 2, "C": 0, "CM": 0, "CB": 0, "S": 2, "I": 0, "WFH": 1, "DLDD": 1, "DL": 9, "TK": 0, "T": 82, "PC": 0, "TAP": 1}, {"no": 19, "nip": "199308082025211074", "nama": "ANDHI SETYO NUGROHO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 541, "pulang_cepat_menit": 0, "H": 93, "A": 14, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 5, "DL": 0, "TK": 0, "T": 26, "PC": 0, "TAP": 2}, {"no": 20, "nip": "200008112025211027", "nama": "ANDRI SAPUTRO", "jabatan": "PENGELOLA UMUM OPERASIONAL", "terlambat_menit": 66, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 0, "TK": 0, "T": 5, "PC": 0, "TAP": 1}, {"no": 21, "nip": "198609172025211074", "nama": "ANDRY AGUS SUHARMOKO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 5, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 3}, {"no": 22, "nip": "198101132025212018", "nama": "ANGGOROWATI, S.E", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 47, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 4, "DL": 0, "TK": 1, "T": 6, "PC": 0, "TAP": 1}, {"no": 23, "nip": "197905082025212031", "nama": "ANIK RAHMAWATI, S.H.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 19, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 0, "TK": 0, "T": 7, "PC": 0, "TAP": 1}, {"no": 24, "nip": "198608212025212055", "nama": "ANIS MUYASAROH, S.Pd", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 3, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 5, "DLDD": 4, "DL": 0, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 25, "nip": "198910282025211104", "nama": "ANJAR PRASTOWO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 17, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 0, "TK": 0, "T": 4, "PC": 0, "TAP": 2}, {"no": 26, "nip": "198308142025211074", "nama": "ANJAR VITOKO, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 98, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 11, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 3}, {"no": 27, "nip": "199604072025212075", "nama": "ANNA WAHYU AMIDA SARI, S.Si.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 197, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 5, "DL": 0, "TK": 0, "T": 52, "PC": 0, "TAP": 1}, {"no": 28, "nip": "198203152025211093", "nama": "ANTON EKO HARDIYANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 46, "pulang_cepat_menit": 0, "H": 101, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 7, "DL": 0, "TK": 0, "T": 8, "PC": 0, "TAP": 1}, {"no": 29, "nip": "199112142025211070", "nama": "ANTON LESTIYONO, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 5, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 30, "nip": "198208122025211097", "nama": "ANUNG NUGROHO, S.E", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 547, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 6, "DL": 1, "TK": 0, "T": 4, "PC": 0, "TAP": 1}, {"no": 31, "nip": "199005172025211087", "nama": "ARIF BUDI DARMAWAN, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 910, "pulang_cepat_menit": 0, "H": 103, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 7, "DL": 0, "TK": 0, "T": 17, "PC": 0, "TAP": 4}, {"no": 32, "nip": "199209042025211063", "nama": "ARIP MUJIYANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 106, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 33, "nip": "199705112025211059", "nama": "ARIS DWI HANANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 206, "pulang_cepat_menit": 0, "H": 106, "A": 2, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 4, "DL": 0, "TK": 0, "T": 25, "PC": 0, "TAP": 13}, {"no": 34, "nip": "198002142025211046", "nama": "ARIYAWAN AGUS PRASETYO, S.T", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 3, "DL": 1, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 35, "nip": "197705222025212018", "nama": "ARUM INDRIA RATIH, A.Md.", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 1025, "pulang_cepat_menit": 0, "H": 97, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 11, "DL": 1, "TK": 0, "T": 3, "PC": 0, "TAP": 3}, {"no": 36, "nip": "198309182025211047", "nama": "ASJUDY A'LA, S.T.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 11, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 4, "DL": 2, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 37, "nip": "199807312025211028", "nama": "ATFA MIFTAHURRIZKA", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 9, "pulang_cepat_menit": 0, "H": 100, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 5, "TK": 0, "T": 4, "PC": 0, "TAP": 1}, {"no": 38, "nip": "198904032025211083", "nama": "AYUB APRIYONO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 3, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 2}, {"no": 39, "nip": "199611272025211082", "nama": "BAGUS AHMAD WICAKSANA", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 1762, "pulang_cepat_menit": 0, "H": 104, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 7, "DL": 1, "TK": 0, "T": 67, "PC": 0, "TAP": 20}, {"no": 40, "nip": "199908062025211031", "nama": "BAGUS KURNIAWAN", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 34, "pulang_cepat_menit": 0, "H": 107, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 3, "DL": 0, "TK": 0, "T": 9, "PC": 0, "TAP": 3}, {"no": 41, "nip": "198205032025211085", "nama": "BAGUS TRI PAMILIH", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 47, "pulang_cepat_menit": 0, "H": 110, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 0, "DL": 1, "TK": 1, "T": 2, "PC": 0, "TAP": 2}, {"no": 42, "nip": "199011212025211057", "nama": "BAMBANG IRAWAN, S.T", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 2, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 5, "DL": 1, "TK": 0, "T": 1, "PC": 0, "TAP": 3}, {"no": 43, "nip": "199412092025211089", "nama": "BAMBANG JATMIKO, S.H", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 6, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 3}, {"no": 44, "nip": "199205022025211110", "nama": "BANGKIT SETIYAWAN, S.T.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 36, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 3, "DL": 0, "TK": 0, "T": 7, "PC": 0, "TAP": 2}, {"no": 45, "nip": "199005012025211080", "nama": "BAWONO GUMILAR, S.T.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 14284, "pulang_cepat_menit": 0, "H": 91, "A": 10, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 4, "DL": 3, "TK": 0, "T": 77, "PC": 0, "TAP": 31}, {"no": 46, "nip": "199001052025211078", "nama": "BAYU ARI MURDOKO, S.T.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 100, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 7, "DL": 2, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 47, "nip": "198204302025211063", "nama": "BENNES PAYAMA", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 70, "pulang_cepat_menit": 0, "H": 53, "A": 8, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 45, "TK": 0, "T": 10, "PC": 0, "TAP": 2}, {"no": 48, "nip": "198301252025211050", "nama": "BUDI CHRISTANTO", "jabatan": "PENGELOLA UMUM OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 107, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 3, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 49, "nip": "199612312025212074", "nama": "BUNGA CHAIRUNISA CHATERADI, S.E", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 99, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 6, "DLDD": 3, "DL": 3, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 50, "nip": "198712192025211055", "nama": "BURHANI TRI WAHYUDI, S.T", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 26, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 6, "DL": 1, "TK": 0, "T": 1, "PC": 0, "TAP": 2}, {"no": 51, "nip": "199010112025212087", "nama": "CATUR PUJI LESTARI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 1, "pulang_cepat_menit": 0, "H": 101, "A": 2, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 5, "DL": 1, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 52, "nip": "199007232025212082", "nama": "CATUR WIYANTI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 522, "pulang_cepat_menit": 0, "H": 99, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 9, "DL": 1, "TK": 0, "T": 4, "PC": 0, "TAP": 1}, {"no": 53, "nip": "199609122025211062", "nama": "CECEP AGUS WAHYUDI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 157, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 6, "DL": 0, "TK": 0, "T": 35, "PC": 0, "TAP": 3}, {"no": 54, "nip": "199601232025212049", "nama": "CITRA WULANDARI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 520, "pulang_cepat_menit": 0, "H": 100, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 7, "DL": 0, "TK": 0, "T": 3, "PC": 0, "TAP": 2}, {"no": 55, "nip": "199004262025211071", "nama": "DADAN FITRIANA", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 1, "pulang_cepat_menit": 0, "H": 101, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 4, "DL": 5, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 56, "nip": "197207052025211048", "nama": "DALIMIN", "jabatan": "PENGELOLA UMUM OPERASIONAL", "terlambat_menit": 797, "pulang_cepat_menit": 14, "H": 96, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 14, "DL": 1, "TK": 0, "T": 9, "PC": 2, "TAP": 4}, {"no": 57, "nip": "198902042025211062", "nama": "DAMAR LANGGENG RAHARJO, A.Md.", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 14, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 1, "TK": 0, "T": 3, "PC": 0, "TAP": 1}, {"no": 58, "nip": "198403212025211062", "nama": "DANANG BANGUN SETYANTO, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 40, "pulang_cepat_menit": 0, "H": 103, "A": 2, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 1, "TK": 0, "T": 10, "PC": 0, "TAP": 3}, {"no": 59, "nip": "199305202025211086", "nama": "DANANG LISTYATMOKO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 1, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 5, "DL": 0, "TK": 0, "T": 1, "PC": 0, "TAP": 5}, {"no": 60, "nip": "198303242025211037", "nama": "DANANG TRIYANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 103, "pulang_cepat_menit": 0, "H": 99, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 9, "DL": 1, "TK": 0, "T": 18, "PC": 0, "TAP": 1}, {"no": 61, "nip": "198705112025211080", "nama": "DANANG WIJAYA, A. Md", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 1, "pulang_cepat_menit": 0, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 4, "DL": 0, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 62, "nip": "198112212025211035", "nama": "DARMIN", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 2, "pulang_cepat_menit": 0, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 4, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 63, "nip": "199406182025211078", "nama": "DEDI SETIAWAN, S.H.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 596, "pulang_cepat_menit": 0, "H": 108, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 3, "DL": 0, "TK": 0, "T": 6, "PC": 0, "TAP": 6}, {"no": 64, "nip": "199612102025212067", "nama": "DESTIANA WULANDARI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 6, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 5, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 65, "nip": "199701192025212044", "nama": "DHIAN AJENG RAMADHANY, S.Ak", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 3, "pulang_cepat_menit": 0, "H": 99, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 8, "DL": 1, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 66, "nip": "199008242025212071", "nama": "DHIKA MUSTIKA SARI, SH", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 140, "pulang_cepat_menit": 0, "H": 101, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 2, "TK": 0, "T": 39, "PC": 0, "TAP": 1}, {"no": 67, "nip": "198903212025211055", "nama": "DHONI KURNIAWAN, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 409, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 6, "DL": 0, "TK": 0, "T": 19, "PC": 0, "TAP": 2}, {"no": 68, "nip": "199510152025211064", "nama": "DIAN CANDRA ARIYANTO, S.T", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 511, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 3, "DL": 1, "TK": 1, "T": 1, "PC": 0, "TAP": 2}, {"no": 69, "nip": "198705212025211075", "nama": "DIAN RAHMADI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 94, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 2, "DL": 14, "TK": 0, "T": 0, "PC": 0, "TAP": 3}, {"no": 70, "nip": "199805172025212049", "nama": "DIANA UTAMININGSIH", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 152, "pulang_cepat_menit": 0, "H": 94, "A": 2, "C": 0, "CM": 0, "CB": 0, "S": 2, "I": 0, "WFH": 3, "DLDD": 10, "DL": 1, "TK": 0, "T": 29, "PC": 0, "TAP": 4}, {"no": 71, "nip": "198610292025211060", "nama": "DIDIK NUGROHO, A.md", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 4, "pulang_cepat_menit": 0, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 4, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 72, "nip": "198201252025211045", "nama": "DIDIT HARDIYANTO, A.md", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 605, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 3, "DL": 0, "TK": 0, "T": 3, "PC": 0, "TAP": 2}, {"no": 73, "nip": "199203072025211087", "nama": "DITA  AJI SANJAYA, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 34, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 1, "DL": 6, "TK": 0, "T": 11, "PC": 0, "TAP": 3}, {"no": 74, "nip": "198403202025212044", "nama": "DIYAH RETNOWATI, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 515, "pulang_cepat_menit": 0, "H": 105, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 2, "DL": 0, "TK": 2, "T": 3, "PC": 0, "TAP": 1}, {"no": 75, "nip": "198703252025211071", "nama": "DONI HUGO YUDI PRANOTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 6, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 6, "DL": 0, "TK": 0, "T": 1, "PC": 0, "TAP": 16}, {"no": 76, "nip": "199212142025212060", "nama": "DWI ASTUTI YUSTIKA INTAN PRATIWI, S.T.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 634, "pulang_cepat_menit": 0, "H": 76, "A": 1, "C": 0, "CM": 30, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 4, "DL": 3, "TK": 1, "T": 17, "PC": 0, "TAP": 1}, {"no": 77, "nip": "199503232025211080", "nama": "DWI BUDI SETIYONO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 157, "pulang_cepat_menit": 0, "H": 102, "A": 4, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 6, "DL": 0, "TK": 0, "T": 16, "PC": 0, "TAP": 2}, {"no": 78, "nip": "199202272025212068", "nama": "DWI LESTARI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 418, "pulang_cepat_menit": 0, "H": 93, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 5, "DLDD": 7, "DL": 6, "TK": 0, "T": 65, "PC": 0, "TAP": 1}, {"no": 79, "nip": "199201092025211068", "nama": "DWI YATMOKO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 3, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 80, "nip": "197809292025211035", "nama": "EDI HARYANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 13, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 7, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 2}, {"no": 81, "nip": "198603282025211073", "nama": "EKO HARY CHRISTANTO, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 31, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 0, "DL": 4, "TK": 0, "T": 9, "PC": 0, "TAP": 1}, {"no": 82, "nip": "198905172025211104", "nama": "EKO PRASETYO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 5, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 83, "nip": "198003102025211064", "nama": "EKO SAPUTRO", "jabatan": "PENGELOLA UMUM OPERASIONAL", "terlambat_menit": 93, "pulang_cepat_menit": 0, "H": 96, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 9, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 84, "nip": "199112102025211082", "nama": "EKO SETIAWAN", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 6, "pulang_cepat_menit": 0, "H": 107, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 4, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 10}, {"no": 85, "nip": "198707122025211106", "nama": "EKO SULISTYANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 5, "DL": 1, "TK": 0, "T": 0, "PC": 0, "TAP": 7}, {"no": 86, "nip": "198511262025211053", "nama": "EKO TEJO CAHYANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 556, "pulang_cepat_menit": 0, "H": 105, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 2, "DL": 3, "TK": 0, "T": 1, "PC": 0, "TAP": 2}, {"no": 87, "nip": "197208052025212020", "nama": "ENI WIDARYATI, S.SOS", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 3, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 5, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 88, "nip": "198010012025211061", "nama": "EPNU SARWO EDY", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 100, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 7, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 3}, {"no": 89, "nip": "199405242025211074", "nama": "ERSA ANDHIKA SETYAWAN, S.Pd", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 102, "A": 2, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 6, "DL": 1, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 90, "nip": "199102222025211075", "nama": "ERWAN FEBRIANTO, S.I.Kom", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 1, "pulang_cepat_menit": 0, "H": 98, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 2, "DL": 8, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 91, "nip": "198806082025211097", "nama": "EVIK JONI SETIYAWAN", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 141, "pulang_cepat_menit": 0, "H": 94, "A": 6, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 0, "DL": 0, "TK": 0, "T": 4, "PC": 0, "TAP": 7}, {"no": 92, "nip": "198903312025211061", "nama": "FAIZAL RIZA", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 93, "nip": "199211162025211081", "nama": "FAJAR KUNCORO, S.T.,", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 751, "pulang_cepat_menit": 0, "H": 100, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 7, "DLDD": 5, "DL": 0, "TK": 0, "T": 21, "PC": 0, "TAP": 3}, {"no": 94, "nip": "199512092025211086", "nama": "FASCHAL PRADESNA, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 2151, "pulang_cepat_menit": 0, "H": 101, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 0, "TK": 5, "T": 15, "PC": 0, "TAP": 1}, {"no": 95, "nip": "199910012025211041", "nama": "FEBRI HERNANTO, S.T", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 2, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 96, "nip": "199206272025212063", "nama": "FELLA SUFAH PRASETYANINGTYAS, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 8, "pulang_cepat_menit": 0, "H": 100, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 7, "DLDD": 4, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 97, "nip": "199702172025211040", "nama": "FEPBRI SETIAWAN", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 73, "pulang_cepat_menit": 0, "H": 96, "A": 3, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 2, "DL": 0, "TK": 0, "T": 3, "PC": 0, "TAP": 3}, {"no": 98, "nip": "199403192025212081", "nama": "FRANSISCA KRISMANANDA, S.K.M.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 526, "pulang_cepat_menit": 0, "H": 96, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 7, "DL": 6, "TK": 0, "T": 7, "PC": 0, "TAP": 1}, {"no": 99, "nip": "197405042025211040", "nama": "GIYATNO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 1336, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 0, "TK": 1, "T": 27, "PC": 0, "TAP": 3}, {"no": 100, "nip": "198102182025211039", "nama": "GUNAWAN", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 9, "pulang_cepat_menit": 0, "H": 87, "A": 7, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 1, "DL": 5, "TK": 0, "T": 2, "PC": 0, "TAP": 2}, {"no": 101, "nip": "199002212025211090", "nama": "GUSTIAN SETYO AJI, S.Kom", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 11, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 6, "DL": 0, "TK": 0, "T": 3, "PC": 0, "TAP": 1}, {"no": 102, "nip": "198905282025211063", "nama": "HANUNG HERY WIBOWO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 100, "A": 2, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 3, "DL": 7, "TK": 0, "T": 0, "PC": 0, "TAP": 4}, {"no": 103, "nip": "197909182025211040", "nama": "HARI SAPTONO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 0, "DL": 6, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 104, "nip": "198606152025211100", "nama": "HARNO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 91, "pulang_cepat_menit": 0, "H": 92, "A": 3, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 6, "DL": 0, "TK": 0, "T": 10, "PC": 0, "TAP": 3}, {"no": 105, "nip": "197211302025211016", "nama": "HARTONO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 27, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 5, "DL": 0, "TK": 0, "T": 3, "PC": 0, "TAP": 1}, {"no": 106, "nip": "198902222025211067", "nama": "HARY SUYOKO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 14, "pulang_cepat_menit": 0, "H": 106, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 6, "DL": 0, "TK": 0, "T": 6, "PC": 0, "TAP": 16}, {"no": 107, "nip": "198708132025211055", "nama": "HENGKI ANTON PURNAWIRAWAN, A.Md.", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 756, "pulang_cepat_menit": 0, "H": 106, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 108, "nip": "199411142025212064", "nama": "HERALY WINAHYU CAHYANING T, S.Kom", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 155, "pulang_cepat_menit": 0, "H": 96, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 1, "DL": 11, "TK": 0, "T": 31, "PC": 0, "TAP": 2}, {"no": 109, "nip": "199302232025211066", "nama": "HERI ISTANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 5, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 6, "DL": 0, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 110, "nip": "198307202025211068", "nama": "HERI YULIANTO, S.T.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 741, "pulang_cepat_menit": 0, "H": 106, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 2, "DL": 0, "TK": 3, "T": 24, "PC": 0, "TAP": 3}, {"no": 111, "nip": "199103262025212069", "nama": "HERISCHA MARTA FRIYAN, S.Pd", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 7, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 6}, {"no": 112, "nip": "199006282025211059", "nama": "IBNU TRI RAHMADI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 599, "pulang_cepat_menit": 0, "H": 93, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 15, "DL": 2, "TK": 0, "T": 14, "PC": 0, "TAP": 1}, {"no": 113, "nip": "198410152025212047", "nama": "IDA MIARSIH, S.Si", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 6, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 114, "nip": "199101022025211066", "nama": "ILHAMSYIH RENDRATNOTO, S.T.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 130, "pulang_cepat_menit": 0, "H": 104, "A": 2, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 2, "DL": 0, "TK": 0, "T": 14, "PC": 0, "TAP": 1}, {"no": 115, "nip": "199908022025212044", "nama": "INDAH NUR'AINI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 4, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 116, "nip": "198802112025212062", "nama": "INDAH PERTIWI SARI, S.T.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 2, "DL": 3, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 117, "nip": "199111242025211073", "nama": "ISMADI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 13, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 6, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 118, "nip": "199311142025211065", "nama": "ISNA SODIK", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 515, "pulang_cepat_menit": 0, "H": 93, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 5, "DL": 8, "TK": 3, "T": 47, "PC": 0, "TAP": 2}, {"no": 119, "nip": "197308182025211026", "nama": "JOKO SANTOSO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 511, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 3, "DL": 0, "TK": 0, "T": 1, "PC": 0, "TAP": 2}, {"no": 120, "nip": "198410192025211048", "nama": "JOKO SULISTYONO, S.H.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 500, "pulang_cepat_menit": 0, "H": 104, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 6, "DL": 0, "TK": 2, "T": 2, "PC": 0, "TAP": 1}, {"no": 121, "nip": "199306082025211063", "nama": "JOKO SUSILO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 355, "pulang_cepat_menit": 0, "H": 96, "A": 6, "C": 0, "CM": 0, "CB": 0, "S": 1, "I": 0, "WFH": 0, "DLDD": 8, "DL": 1, "TK": 0, "T": 14, "PC": 0, "TAP": 17}, {"no": 122, "nip": "198907012025212080", "nama": "JULI KARTIKAWATI, SPd", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 1127, "pulang_cepat_menit": 0, "H": 95, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 1, "I": 0, "WFH": 1, "DLDD": 13, "DL": 1, "TK": 0, "T": 11, "PC": 0, "TAP": 4}, {"no": 123, "nip": "198106132025211039", "nama": "JUNIYANTO FAJAR WIBOWO, S.E", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 2, "pulang_cepat_menit": 0, "H": 107, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 2, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 124, "nip": "198701222025212056", "nama": "KEMALA NUGRAHENI, S. Sos", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 45, "pulang_cepat_menit": 0, "H": 89, "A": 2, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 16, "DL": 1, "TK": 0, "T": 11, "PC": 0, "TAP": 1}, {"no": 125, "nip": "198105072025211079", "nama": "KRISNO SUNANTO HADI, S.T.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 85, "pulang_cepat_menit": 0, "H": 97, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 10, "DL": 2, "TK": 0, "T": 16, "PC": 0, "TAP": 1}, {"no": 126, "nip": "197602092025211026", "nama": "LARTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 72, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 28, "I": 0, "WFH": 2, "DLDD": 8, "DL": 1, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 127, "nip": "198901132025212086", "nama": "LISA PURWANTI, S.Pd.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 7, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 128, "nip": "199503202025212077", "nama": "LISTYANI PUJISRIRAHAYU, S.Pd.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 142, "pulang_cepat_menit": 0, "H": 92, "A": 3, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 6, "DLDD": 1, "DL": 10, "TK": 0, "T": 12, "PC": 0, "TAP": 4}, {"no": 129, "nip": "197703142025211026", "nama": "MAMAN SUMARDONO", "jabatan": "PENGELOLA UMUM OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 101, "A": 2, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 5, "DL": 0, "TK": 4, "T": 0, "PC": 0, "TAP": 2}, {"no": 130, "nip": "199708012025211052", "nama": "MUHAMMAD CHAIRUL AZIZ, S.T", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 172, "pulang_cepat_menit": 0, "H": 97, "A": 4, "C": 0, "CM": 0, "CB": 0, "S": 3, "I": 0, "WFH": 5, "DLDD": 3, "DL": 0, "TK": 0, "T": 21, "PC": 0, "TAP": 5}, {"no": 131, "nip": "199411232025211068", "nama": "MUHAMMAD RAIS ADE PRASETYA", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 247, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 1, "DL": 5, "TK": 0, "T": 37, "PC": 0, "TAP": 2}, {"no": 132, "nip": "198505112025211050", "nama": "MUJIONO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 3, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 133, "nip": "198005082025212035", "nama": "MURTIANA LINDA EKASARI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 92, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 1, "I": 0, "WFH": 2, "DLDD": 6, "DL": 0, "TK": 0, "T": 16, "PC": 0, "TAP": 1}, {"no": 134, "nip": "198705192025211066", "nama": "MUTHOHAR LUTFI, A.Md.", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 0, "DL": 2, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 135, "nip": "199403302025211073", "nama": "NDARU EDI SUDRAJAT, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 206, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 5, "DL": 0, "TK": 0, "T": 30, "PC": 0, "TAP": 1}, {"no": 136, "nip": "198711052025211088", "nama": "NOVA ENDRO MURJIYANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 510, "pulang_cepat_menit": 0, "H": 107, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 3, "DL": 0, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 137, "nip": "198911302025211074", "nama": "NOVIA ANDY IRYAWAN", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 171, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 5, "DL": 0, "TK": 0, "T": 20, "PC": 0, "TAP": 1}, {"no": 138, "nip": "198009252025212033", "nama": "NUNUNG NURUL HIDAYATI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 28, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 4, "DL": 0, "TK": 0, "T": 9, "PC": 0, "TAP": 1}, {"no": 139, "nip": "198908302025211067", "nama": "NUR ARIADI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 527, "pulang_cepat_menit": 0, "H": 101, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 5, "DL": 3, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 140, "nip": "198908302025211066", "nama": "NUR ARIANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 528, "pulang_cepat_menit": 0, "H": 102, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 2, "TK": 0, "T": 3, "PC": 0, "TAP": 1}, {"no": 141, "nip": "199202122025211086", "nama": "NUR CAHYO FEBRIANTORO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 15, "pulang_cepat_menit": 0, "H": 110, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 0, "DL": 0, "TK": 0, "T": 6, "PC": 0, "TAP": 11}, {"no": 142, "nip": "198805092025212095", "nama": "NUR FAJAR CHAYATI, S.PD", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 576, "pulang_cepat_menit": 0, "H": 101, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 8, "DL": 0, "TK": 0, "T": 6, "PC": 0, "TAP": 1}, {"no": 143, "nip": "198611182025212049", "nama": "NURYANTI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 474, "pulang_cepat_menit": 0, "H": 98, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 1, "I": 0, "WFH": 3, "DLDD": 9, "DL": 1, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 144, "nip": "199410072025211066", "nama": "OKTAMA DIMAS INDARKO PUTRO, S.T.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 102, "pulang_cepat_menit": 0, "H": 88, "A": 18, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 3, "DL": 0, "TK": 0, "T": 10, "PC": 0, "TAP": 1}, {"no": 145, "nip": "197510032025211030", "nama": "PADA", "jabatan": "PENGELOLA UMUM OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 146, "nip": "198112112025211044", "nama": "PAJAR SURYANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 5, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 2}, {"no": 147, "nip": "198809052025211063", "nama": "PARIYANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 526, "pulang_cepat_menit": 0, "H": 111, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 0, "DL": 0, "TK": 0, "T": 4, "PC": 0, "TAP": 2}, {"no": 148, "nip": "198712222025211083", "nama": "PAWOKO ARYO WICAKSONO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 1506, "pulang_cepat_menit": 0, "H": 73, "A": 25, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 3, "DL": 10, "TK": 0, "T": 61, "PC": 0, "TAP": 40}, {"no": 149, "nip": "199003302025211078", "nama": "PEBRI BAGUS SUSILO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 2310, "pulang_cepat_menit": 0, "H": 96, "A": 5, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 9, "DL": 0, "TK": 0, "T": 22, "PC": 0, "TAP": 6}, {"no": 150, "nip": "198810262025211068", "nama": "PRASENO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 53, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 5, "DL": 0, "TK": 0, "T": 12, "PC": 0, "TAP": 1}, {"no": 151, "nip": "198912202025211119", "nama": "PRIBADI ANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 179, "pulang_cepat_menit": 0, "H": 86, "A": 8, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 16, "DL": 0, "TK": 0, "T": 13, "PC": 0, "TAP": 7}, {"no": 152, "nip": "199206132025211067", "nama": "PUJI PRIHANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 46, "pulang_cepat_menit": 0, "H": 107, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 3, "DL": 0, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 153, "nip": "198109152025211070", "nama": "PURWANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 476, "pulang_cepat_menit": 0, "H": 10, "A": 79, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 20, "DL": 0, "TK": 0, "T": 25, "PC": 0, "TAP": 8}, {"no": 154, "nip": "199511022025211046", "nama": "RADHITYA NOVARIANO, ST", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 1952, "pulang_cepat_menit": 0, "H": 69, "A": 28, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 0, "DL": 11, "TK": 1, "T": 66, "PC": 0, "TAP": 44}, {"no": 155, "nip": "199406302025211072", "nama": "RADITYA ADHI WIBOWO, A.Md.", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 54, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 5, "DL": 0, "TK": 1, "T": 15, "PC": 0, "TAP": 1}, {"no": 156, "nip": "199502032025212066", "nama": "RATRI TYAS ARDIATNO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 34, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 3, "DL": 2, "TK": 0, "T": 8, "PC": 0, "TAP": 1}, {"no": 157, "nip": "198111222025212038", "nama": "RETNO SURYANTI, ST", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 3, "DL": 0, "TK": 1, "T": 0, "PC": 0, "TAP": 1}, {"no": 158, "nip": "198209172025211074", "nama": "RHINO ADI SUTARNO, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 4, "DL": 1, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 159, "nip": "199505052025211114", "nama": "RIDHWAN SYAIFULLAH", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 98, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 9, "DL": 1, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 160, "nip": "199801062025211046", "nama": "RIKY AZIK PRASETIYO, S.M.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 269, "pulang_cepat_menit": 0, "H": 98, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 11, "DL": 0, "TK": 1, "T": 32, "PC": 0, "TAP": 1}, {"no": 161, "nip": "198709162025211062", "nama": "RIYAN SUSENO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 556, "pulang_cepat_menit": 0, "H": 112, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 0, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 2}, {"no": 162, "nip": "199809042025211028", "nama": "ROBERTHUS GOZA SEPTANA", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 297, "pulang_cepat_menit": 0, "H": 76, "A": 3, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 2, "WFH": 4, "DLDD": 28, "DL": 0, "TK": 0, "T": 10, "PC": 0, "TAP": 1}, {"no": 163, "nip": "199406202025211079", "nama": "ROCHMAT DARMAWAN", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 78, "pulang_cepat_menit": 0, "H": 100, "A": 2, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 7, "DL": 0, "TK": 0, "T": 5, "PC": 0, "TAP": 7}, {"no": 164, "nip": "199012182025211080", "nama": "RONI ARIFIN", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 570, "pulang_cepat_menit": 0, "H": 94, "A": 6, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 8, "DL": 1, "TK": 0, "T": 5, "PC": 0, "TAP": 15}, {"no": 165, "nip": "198310212025212027", "nama": "ROSALIA SAKTI, S.T", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 304, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 4, "DL": 1, "TK": 0, "T": 56, "PC": 0, "TAP": 1}, {"no": 166, "nip": "197406232025211029", "nama": "SAPTO YUNIADI, S.Pd", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 2, "DL": 3, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 167, "nip": "198105262025211047", "nama": "SARTONO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 6, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 5, "DL": 0, "TK": 0, "T": 4, "PC": 0, "TAP": 2}, {"no": 168, "nip": "199108212025212077", "nama": "SETYO LESTARI AJI, S.Sos.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 10, "pulang_cepat_menit": 0, "H": 95, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 6, "DLDD": 6, "DL": 4, "TK": 0, "T": 5, "PC": 0, "TAP": 1}, {"no": 169, "nip": "198508052025211098", "nama": "SETYO YUDHI JATMIKO, A.Md.", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 5, "DL": 1, "TK": 0, "T": 0, "PC": 0, "TAP": 2}, {"no": 170, "nip": "199708242025211045", "nama": "SHAFRI NUR ARDHANI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 211, "pulang_cepat_menit": 0, "H": 94, "A": 3, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 11, "DL": 3, "TK": 0, "T": 43, "PC": 0, "TAP": 8}, {"no": 171, "nip": "198411262025212042", "nama": "SHIAN ISMIARTI SUTARNO, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 18, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 5, "DL": 0, "TK": 0, "T": 3, "PC": 0, "TAP": 2}, {"no": 172, "nip": "198211202025211056", "nama": "SIGIT HARTADI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 0, "DL": 5, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 173, "nip": "198408152025211098", "nama": "SLAMET WALUYO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 27, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 5, "DL": 0, "TK": 0, "T": 8, "PC": 0, "TAP": 1}, {"no": 174, "nip": "199008312025212061", "nama": "SRI SAPARI, S.Pd.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 70, "pulang_cepat_menit": 0, "H": 54, "A": 2, "C": 0, "CM": 55, "CB": 0, "S": 5, "I": 0, "WFH": 0, "DLDD": 2, "DL": 0, "TK": 0, "T": 6, "PC": 0, "TAP": 1}, {"no": 175, "nip": "198112092025212018", "nama": "SRI WAHYUNI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 242, "pulang_cepat_menit": 0, "H": 92, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 13, "DL": 3, "TK": 0, "T": 37, "PC": 0, "TAP": 1}, {"no": 176, "nip": "197302052025212011", "nama": "SRI WAHYUNI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 121, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 0, "TK": 0, "T": 27, "PC": 0, "TAP": 1}, {"no": 177, "nip": "198107232025211043", "nama": "SRI WIDODO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 178, "nip": "197910302025211036", "nama": "SUGENG SRI WIDODO, A.Md.", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 21, "pulang_cepat_menit": 0, "H": 100, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 8, "DL": 0, "TK": 0, "T": 3, "PC": 0, "TAP": 2}, {"no": 179, "nip": "197708252025211033", "nama": "SUGIYOTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 3, "pulang_cepat_menit": 0, "H": 97, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 9, "DL": 1, "TK": 0, "T": 1, "PC": 0, "TAP": 4}, {"no": 180, "nip": "197712222025211023", "nama": "SUKARNO, A.Md.", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 3, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 181, "nip": "197802022025211047", "nama": "SULARDI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 2}, {"no": 182, "nip": "198509052025212046", "nama": "SULISTIYOWATI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 1703, "pulang_cepat_menit": 0, "H": 107, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 2, "DL": 0, "TK": 0, "T": 45, "PC": 0, "TAP": 1}, {"no": 183, "nip": "198611282025212048", "nama": "SUMARNI, S.M.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 1, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 0, "DL": 5, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 184, "nip": "197712162025212011", "nama": "SUMARSIH, A M.F", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 16, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 3, "DL": 1, "TK": 0, "T": 5, "PC": 0, "TAP": 1}, {"no": 185, "nip": "199104172025211106", "nama": "SUNANDAR PRIYA KARNANTA, S.T", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 89, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 1, "TK": 0, "T": 15, "PC": 0, "TAP": 1}, {"no": 186, "nip": "197907312025211040", "nama": "SUNARDI", "jabatan": "PENGELOLA UMUM OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 3, "DL": 4, "TK": 0, "T": 0, "PC": 0, "TAP": 2}, {"no": 187, "nip": "197704252025211037", "nama": "SUPARDI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 99, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 9, "DL": 1, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 188, "nip": "198107282025211049", "nama": "SUPARLAN", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 512, "pulang_cepat_menit": 0, "H": 104, "A": 4, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 3, "DL": 0, "TK": 0, "T": 1, "PC": 0, "TAP": 2}, {"no": 189, "nip": "197606162025211065", "nama": "SUPARMAN", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 82, "A": 25, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 4, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 190, "nip": "198704302025211066", "nama": "SUPRIYADI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 5, "DL": 1, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 191, "nip": "197407142025211029", "nama": "SUPRIYADI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 2, "DL": 2, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 192, "nip": "198404162025211087", "nama": "SUPRIYADI S.E, S.E", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 1568, "pulang_cepat_menit": 0, "H": 99, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 4, "TK": 0, "T": 9, "PC": 0, "TAP": 7}, {"no": 193, "nip": "198906122025211124", "nama": "SUPRIYANTO, A.Md.", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 199, "pulang_cepat_menit": 0, "H": 92, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 12, "DL": 3, "TK": 0, "T": 27, "PC": 0, "TAP": 6}, {"no": 194, "nip": "198109042025211044", "nama": "SURANTO, A.Md.", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 107, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 2, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 195, "nip": "198606022025211096", "nama": "SURYANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 3, "DL": 1, "TK": 0, "T": 0, "PC": 0, "TAP": 2}, {"no": 196, "nip": "198107202025211068", "nama": "SUSILO AGUS SAPUTRO, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 197, "nip": "198207032025212050", "nama": "SUSYANA YUSUF, A.Md.", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 1044, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 5, "DL": 0, "TK": 0, "T": 9, "PC": 0, "TAP": 2}, {"no": 198, "nip": "197506022025211042", "nama": "SUTARMAN", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 13, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 3, "DL": 1, "TK": 0, "T": 4, "PC": 0, "TAP": 1}, {"no": 199, "nip": "198102242025211029", "nama": "SYAHRUL, AMd", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 0, "DL": 3, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 200, "nip": "198407112025211067", "nama": "TEGUH DWI PRASETIA, S.Kom", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 510, "pulang_cepat_menit": 0, "H": 100, "A": 4, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 0, "TK": 0, "T": 1, "PC": 0, "TAP": 2}, {"no": 201, "nip": "198112022025211045", "nama": "TEGUH HARTANTO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 66, "pulang_cepat_menit": 16, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 3, "DL": 0, "TK": 0, "T": 1, "PC": 2, "TAP": 1}, {"no": 202, "nip": "199309102025211085", "nama": "TEGUH SETIYANDANI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 1707, "pulang_cepat_menit": 420, "H": 96, "A": 2, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 3, "DL": 11, "TK": 0, "T": 40, "PC": 1, "TAP": 1}, {"no": 203, "nip": "199410272025211054", "nama": "TONI ARIFIN", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 9, "pulang_cepat_menit": 0, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 4, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 2}, {"no": 204, "nip": "198906272025212081", "nama": "TRI HANDAYANI, S.M", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 21, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 0, "DL": 6, "TK": 0, "T": 6, "PC": 0, "TAP": 1}, {"no": 205, "nip": "199702032025211038", "nama": "TRI HARYADI, S.T.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 37, "pulang_cepat_menit": 0, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 3, "DL": 0, "TK": 0, "T": 10, "PC": 0, "TAP": 1}, {"no": 206, "nip": "197901122025212020", "nama": "TRI KUSUMA DEWI, S.T.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 10, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 0, "TK": 0, "T": 7, "PC": 0, "TAP": 1}, {"no": 207, "nip": "198603152025212057", "nama": "TRI MULYANI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 516, "pulang_cepat_menit": 0, "H": 102, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 1, "DL": 3, "TK": 3, "T": 3, "PC": 0, "TAP": 2}, {"no": 208, "nip": "198811032025211077", "nama": "UJANG NUR HALIM, A.Md", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 3, "DL": 2, "TK": 0, "T": 0, "PC": 0, "TAP": 1}, {"no": 209, "nip": "199307062025212069", "nama": "VONDA ANGGOROWATI, A.Md.", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 2, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 4, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 210, "nip": "197806012025211045", "nama": "WAHYONO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 1, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 6, "DL": 1, "TK": 0, "T": 1, "PC": 0, "TAP": 3}, {"no": 211, "nip": "198311222025211054", "nama": "WAHYU ASIANTO, S.T.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 518, "pulang_cepat_menit": 0, "H": 105, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 1, "DL": 3, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 212, "nip": "198312282025211074", "nama": "WARDOYO", "jabatan": "PENGELOLA UMUM OPERASIONAL", "terlambat_menit": 549, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 6, "DL": 0, "TK": 0, "T": 11, "PC": 0, "TAP": 7}, {"no": 213, "nip": "198206052025212053", "nama": "WARSITI", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 544, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 5, "DL": 0, "TK": 0, "T": 4, "PC": 0, "TAP": 1}, {"no": 214, "nip": "198208282025211085", "nama": "WIDI ASIHNO, S.E", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 49, "pulang_cepat_menit": 0, "H": 101, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 4, "DLDD": 6, "DL": 0, "TK": 0, "T": 12, "PC": 0, "TAP": 1}, {"no": 215, "nip": "198701012025211187", "nama": "WIDODO", "jabatan": "PENGELOLA UMUM OPERASIONAL", "terlambat_menit": 0, "pulang_cepat_menit": 0, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 5, "DL": 0, "TK": 0, "T": 0, "PC": 0, "TAP": 19}, {"no": 216, "nip": "198405282025211053", "nama": "WIDODO", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 587, "pulang_cepat_menit": 0, "H": 98, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 10, "DL": 3, "TK": 0, "T": 10, "PC": 0, "TAP": 5}, {"no": 217, "nip": "199303042025211050", "nama": "WINANDO WAHYUDI PUTRA", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 703, "pulang_cepat_menit": 0, "H": 96, "A": 2, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 0, "DLDD": 2, "DL": 1, "TK": 0, "T": 7, "PC": 0, "TAP": 9}, {"no": 218, "nip": "199504242025212101", "nama": "WISIK SUKMA SURYOWATI, A.Md.I.Kom.", "jabatan": "PENGELOLA LAYANAN OPERASIONAL", "terlambat_menit": 285, "pulang_cepat_menit": 0, "H": 100, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 5, "DLDD": 6, "DL": 0, "TK": 0, "T": 13, "PC": 0, "TAP": 1}, {"no": 219, "nip": "197702212025212015", "nama": "WIWIK SETYOWATI", "jabatan": "PENGELOLA UMUM OPERASIONAL", "terlambat_menit": 527, "pulang_cepat_menit": 0, "H": 98, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 1, "DLDD": 12, "DL": 0, "TK": 0, "T": 3, "PC": 0, "TAP": 4}, {"no": 220, "nip": "198306292025211050", "nama": "YAHASARA HALAWA", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 3, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 3, "DLDD": 4, "DL": 0, "TK": 0, "T": 2, "PC": 0, "TAP": 1}, {"no": 221, "nip": "199008052025212110", "nama": "YESI LINA NINGSIH", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 89, "pulang_cepat_menit": 0, "H": 106, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 3, "DL": 0, "TK": 0, "T": 5, "PC": 0, "TAP": 1}, {"no": 222, "nip": "199810282025211063", "nama": "YOGA AJI PAMUNGKAS", "jabatan": "OPERATOR LAYANAN OPERASIONAL", "terlambat_menit": 2, "pulang_cepat_menit": 0, "H": 100, "A": 0, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 7, "DLDD": 5, "DL": 0, "TK": 0, "T": 1, "PC": 0, "TAP": 1}, {"no": 223, "nip": "197607272025212020", "nama": "YULINDA SUSILOWATI, S.E.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 1, "pulang_cepat_menit": 0, "H": 105, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 4, "DL": 0, "TK": 0, "T": 1, "PC": 0, "TAP": 2}, {"no": 224, "nip": "197807312025212013", "nama": "YUNI IRAWATI, S.H.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 47, "pulang_cepat_menit": 0, "H": 104, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 5, "DL": 0, "TK": 0, "T": 13, "PC": 0, "TAP": 1}, {"no": 225, "nip": "198603172025211068", "nama": "YUSTISIAJI DEWORO, S.T.", "jabatan": "PENATA LAYANAN OPERASIONAL", "terlambat_menit": 20, "pulang_cepat_menit": 0, "H": 103, "A": 1, "C": 0, "CM": 0, "CB": 0, "S": 0, "I": 0, "WFH": 2, "DLDD": 6, "DL": 0, "TK": 0, "T": 4, "PC": 0, "TAP": 2}];
+
+/* Bidang/unit kerja dibuat dinamis (dapat diedit) agar template ini bisa dipakai bidang lain */
+
+/* ============================================================
+   DATA PERSISTENCE — unduh/unggah Excel untuk memperbarui data
+   ============================================================ */
+const STORAGE_KEY = 'pppk_disiplin_data_v1';
+const STORAGE_META_KEY = 'pppk_disiplin_meta_v1';
+
+function loadSavedData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return null;
+    const arr = JSON.parse(raw);
+    if(Array.isArray(arr) && arr.length) return arr;
+  }catch(e){}
+  return null;
+}
+function loadSavedMeta(){
+  try{
+    const raw = localStorage.getItem(STORAGE_META_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return null;
+}
+function saveData(data, meta){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(STORAGE_META_KEY, JSON.stringify(meta));
+  }catch(e){}
+}
+function clearSavedData(){
+  try{
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_META_KEY);
+  }catch(e){}
+}
+
+let DATA = loadSavedData() || DEFAULT_DATA.slice();
+let dataMeta = loadSavedMeta();
+
+function updateDataStatusText(){
+  const el = document.getElementById('dataStatusText');
+  const wrap = el.parentElement;
+  if(dataMeta && dataMeta.filename){
+    el.textContent = `Data dari file "${dataMeta.filename}" · diunggah ${dataMeta.uploadedAt} · ${DATA.length} pegawai`;
+    wrap.classList.add('stale');
+  } else {
+    el.textContent = `Data Pegawai Pemerintah dengan Perjanjian Kerja (PPPK) Paruh Waktu · ${DATA.length} pegawai`;
+    wrap.classList.remove('stale');
+  }
+}
+function showUploadMsg(text, ok){
+  const el = document.getElementById('uploadMsg');
+  el.textContent = text;
+  el.className = 'upload-msg ' + (ok ? 'ok' : 'err');
+  el.style.display = 'block';
+}
+
+/* Excel column header → field key (dicocokkan case-insensitive, apapun urutan kolomnya) */
+const HEADER_FIELD_MAP = {
+  'no':'no', 'nip':'nip', 'nama':'nama', 'jabatan':'jabatan',
+  'h':'H', 'a':'A', 'c':'C', 'cm':'CM', 'cb':'CB', 's':'S', 'i':'I',
+  'wfh':'WFH', 'dldd':'DLDD', 'dl':'DL', 'tk':'TK', 't':'T', 'pc':'PC', 'tap':'TAP'
+};
+function matchHeaderField(label){
+  const norm = String(label||'').trim().toLowerCase();
+  if(HEADER_FIELD_MAP[norm]) return HEADER_FIELD_MAP[norm];
+  if(norm.startsWith('terlambat')) return 'terlambat_menit';
+  if(norm.startsWith('pulang')) return 'pulang_cepat_menit';
+  return null;
+}
+
+function parseWorkbook(workbook){
+  // pilih sheet yang mengandung DPUPR jika ada, kalau tidak pakai sheet pertama
+  let sheetName = workbook.SheetNames.find(n => /dpupr/i.test(n)) || workbook.SheetNames[0];
+  const sheet = workbook.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(sheet, {header:1, defval:null, blankrows:false});
+
+  // cari baris header: baris yang memiliki sel bernilai persis "nip"
+  let headerRowIdx = -1, colMap = {};
+  for(let r=0; r<rows.length; r++){
+    const row = rows[r];
+    if(!row) continue;
+    const hasNip = row.some(c => String(c||'').trim().toLowerCase()==='nip');
+    if(hasNip){
+      headerRowIdx = r;
+      row.forEach((cell, ci) => {
+        const field = matchHeaderField(cell);
+        if(field) colMap[field] = ci;
+      });
+      break;
+    }
+  }
+  if(headerRowIdx===-1 || !('nip' in colMap) || !('nama' in colMap)){
+    throw new Error('Kolom NIP/Nama tidak ditemukan. Pastikan file memakai format rekap yang sama (header: no, nip, nama, jabatan, terlambat, pulang cepat, H, A, C, CM, CB, S, I, WFH, DLDD, DL, TK, T, PC, TAP).');
+  }
+
+  const toint = v => { const n = parseInt(v,10); return isNaN(n) ? 0 : n; };
+  const out = [];
+  const seenNip = new Set();
+  for(let r=headerRowIdx+1; r<rows.length; r++){
+    const row = rows[r];
+    if(!row) continue;
+    const nipRaw = row[colMap.nip];
+    const namaRaw = row[colMap.nama];
+    if(nipRaw===null || nipRaw===undefined || String(nipRaw).trim()==='') continue;
+    const nipStr = String(nipRaw).trim();
+    if(nipStr.toLowerCase()==='nip') continue; // baris header berulang
+    if(!namaRaw || String(namaRaw).trim()==='') continue;
+    if(seenNip.has(nipStr)) continue; // lindungi dari baris duplikat pada sumber data
+    seenNip.add(nipStr);
+    const rec = {
+      no: toint(row[colMap.no]) || (out.length+1),
+      nip: nipStr,
+      nama: String(namaRaw).trim(),
+      jabatan: colMap.jabatan!==undefined ? String(row[colMap.jabatan]||'').trim() : '',
+      terlambat_menit: toint(row[colMap.terlambat_menit]),
+      pulang_cepat_menit: toint(row[colMap.pulang_cepat_menit]),
+    };
+    ['H','A','C','CM','CB','S','I','WFH','DLDD','DL','TK','T','PC','TAP'].forEach(k=>{
+      rec[k] = colMap[k]!==undefined ? toint(row[colMap[k]]) : 0;
+    });
+    out.push(rec);
+  }
+  return out;
+}
+
+function handleDownload(){
+  const rows = DATA.map(d => ({
+    'No': d.no, 'NIP': d.nip, 'Nama': d.nama, 'Jabatan': d.jabatan,
+    'Terlambat (menit)': d.terlambat_menit, 'Pulang Cepat (menit)': d.pulang_cepat_menit,
+    'H': d.H, 'A': d.A, 'C': d.C, 'CM': d.CM, 'CB': d.CB, 'S': d.S, 'I': d.I,
+    'WFH': d.WFH, 'DLDD': d.DLDD, 'DL': d.DL, 'TK': d.TK, 'T': d.T, 'PC': d.PC, 'TAP': d.TAP
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{wch:5},{wch:20},{wch:32},{wch:28},{wch:16},{wch:16},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:6},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Rekap Presensi');
+  const stamp = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `rekap-presensi-pppk-dpupr-${stamp}.xlsx`);
+}
+
+function handleFileUpload(file){
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+      const parsed = parseWorkbook(wb);
+      if(!parsed.length) throw new Error('Tidak ada baris data pegawai yang valid ditemukan pada file ini.');
+      DATA = parsed;
+      dataMeta = {
+        filename: file.name,
+        uploadedAt: new Date().toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'})
+      };
+      saveData(DATA, dataMeta);
+      rebuildJabatanFilter();
+      state = { search:'', jabatan:'', status:'', sortKey:'A', sortDir:'desc' };
+      document.getElementById('search').value='';
+      document.getElementById('filterJabatan').value='';
+      document.getElementById('filterStatus').value='';
+      updateDataStatusText();
+      renderCards();
+      renderTable();
+      showUploadMsg(`Berhasil memperbarui data: ${DATA.length} pegawai dimuat dari "${file.name}".`, true);
+    }catch(err){
+      showUploadMsg('Gagal membaca file: ' + err.message, false);
+    }
+  };
+  reader.onerror = () => showUploadMsg('Gagal membaca file. Coba lagi.', false);
+  reader.readAsArrayBuffer(file);
+}
+
+/* ============================================================
+   KONVERSI KETERLAMBATAN → EKIVALEN HARI
+   Basis: 7,5 jam (450 menit) = 1 hari kerja (standar umum ASN)
+   Jam kerja acuan (bukan basis konversi, hanya referensi):
+     Senin–Kamis 07.30–16.00 (510 menit), Jumat 07.30–11.30 (240 menit)
+   ============================================================ */
+const MENIT_PER_HARI_SETARA = 450;
+function hariTerlambatSetara(menit){
+  return Math.floor((menit||0) / MENIT_PER_HARI_SETARA);
+}
+function severityRank(c){
+  const base = {aman:0, ringan:10, sedang:20, berat:30}[c.tingkat] || 0;
+  return base + (c.tier||0);
+}
+/* Mengambil status yang LEBIH BERAT antara akumulasi Alpa vs ekivalen hari keterlambatan */
+function classifyGabungan(d){
+  const cAlpa = classify(d.A);
+  const hariT = hariTerlambatSetara(d.terlambat_menit);
+  const cTerlambat = classify(hariT);
+  const pakaiTerlambat = severityRank(cTerlambat) > severityRank(cAlpa);
+  const final = pakaiTerlambat ? cTerlambat : cAlpa;
+  return Object.assign({}, final, {
+    sumber: pakaiTerlambat ? 'keterlambatan' : 'alpa',
+    hariAlpa: d.A,
+    hariTerlambatSetara: hariT,
+    cAlpa, cTerlambat
+  });
+}
+
+/* ============================================================
+   KLASIFIKASI — Pasal 9 (ringan), 10 (sedang), 11 (berat)
+   dasar: akumulasi hari Alpa (tanpa alasan sah) dalam 1 tahun
+   ============================================================ */
+function classify(a){
+  if(a>=21) return {tingkat:'berat', label:'Berat', tier:1,
+    sanksi:'Pemutusan Hubungan Perjanjian Kerja dengan hormat tidak atas permintaan sendiri',
+    pasal:'Pasal 11 huruf n angka 1)', ambang:'≥ 21 hari kerja (kumulatif dalam 1 tahun)'};
+  if(a>=17) return {tingkat:'sedang', label:'Sedang', tier:3,
+    sanksi:'Pemotongan gaji 10% selama 12 (dua belas) bulan',
+    pasal:'Pasal 10 huruf l angka 3)', ambang:'17–20 hari kerja'};
+  if(a>=14) return {tingkat:'sedang', label:'Sedang', tier:2,
+    sanksi:'Pemotongan gaji 10% selama 9 (sembilan) bulan',
+    pasal:'Pasal 10 huruf l angka 2)', ambang:'14–16 hari kerja'};
+  if(a>=11) return {tingkat:'sedang', label:'Sedang', tier:1,
+    sanksi:'Pemotongan gaji 10% selama 6 (enam) bulan',
+    pasal:'Pasal 10 huruf l angka 1)', ambang:'11–13 hari kerja'};
+  if(a>=7) return {tingkat:'ringan', label:'Ringan', tier:3,
+    sanksi:'Pernyataan tidak puas secara tertulis',
+    pasal:'Pasal 9 huruf j angka 3)', ambang:'7–10 hari kerja'};
+  if(a>=4) return {tingkat:'ringan', label:'Ringan', tier:2,
+    sanksi:'Teguran tertulis',
+    pasal:'Pasal 9 huruf j angka 2)', ambang:'4–6 hari kerja'};
+  if(a>=3) return {tingkat:'ringan', label:'Ringan', tier:1,
+    sanksi:'Teguran lisan',
+    pasal:'Pasal 9 huruf j angka 1)', ambang:'3 hari kerja'};
+  return {tingkat:'aman', label:'Aman', tier:0,
+    sanksi:'Tidak ada indikasi pelanggaran jam kerja',
+    pasal:'—', ambang:'0–2 hari kerja'};
+}
+
+function signSVG(tingkat, cls){
+  const shapes = {
+    aman:'<span class="sign sign-circle '+(cls||'')+'"></span>',
+    ringan:'<span class="sign sign-tri '+(cls||'')+'"></span>',
+    sedang:'<span class="sign sign-diamond '+(cls||'')+'"></span>',
+    berat:'<span class="sign sign-octagon '+(cls||'')+'"></span>'
+  };
+  return shapes[tingkat] || shapes.aman;
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let state = { search:'', jabatan:'', status:'', sortKey:'A', sortDir:'desc' };
+let currentPegawai = null;
+
+/* populate jabatan filter (dipanggil ulang setiap kali data berubah) */
+function rebuildJabatanFilter(){
+  const selJabatan = document.getElementById('filterJabatan');
+  selJabatan.innerHTML = '<option value="">Semua Jabatan</option>';
+  const jabatanSet = [...new Set(DATA.map(d=>d.jabatan))].sort();
+  jabatanSet.forEach(j=>{
+    const o = document.createElement('option'); o.value=j; o.textContent=j;
+    selJabatan.appendChild(o);
+  });
+}
+rebuildJabatanFilter();
+
+/* ============================================================
+   RENDER: SUMMARY CARDS
+   ============================================================ */
+function renderCards(){
+  const counts = {total:DATA.length, aman:0, ringan:0, sedang:0, berat:0};
+  DATA.forEach(d=>{ const c = classifyGabungan(d).tingkat; counts[c]++; });
+  const cardsEl = document.getElementById('cards');
+  cardsEl.innerHTML = `
+    <div class="card">
+      <div class="card-top"><span class="lbl">Total Pegawai</span></div>
+      <div class="num">${counts.total}</div>
+      <div class="lbl">PPPK Paruh Waktu terdata</div>
+    </div>
+    <div class="card aman">
+      <div class="card-top">${signSVG('aman')}<span class="lbl">0–2 hari Alpa</span></div>
+      <div class="num" style="color:var(--green)">${counts.aman}</div>
+      <div class="lbl">Aman</div>
+    </div>
+    <div class="card ringan">
+      <div class="card-top">${signSVG('ringan')}<span class="lbl">3–10 hari Alpa</span></div>
+      <div class="num" style="color:var(--amber)">${counts.ringan}</div>
+      <div class="lbl">Indikasi ringan (Psl 9)</div>
+    </div>
+    <div class="card sedang">
+      <div class="card-top">${signSVG('sedang')}<span class="lbl">11–20 hari Alpa</span></div>
+      <div class="num" style="color:var(--orange)">${counts.sedang}</div>
+      <div class="lbl">Indikasi sedang (Psl 10)</div>
+    </div>
+    <div class="card berat">
+      <div class="card-top">${signSVG('berat')}<span class="lbl">≥21 hari Alpa</span></div>
+      <div class="num" style="color:var(--red)">${counts.berat}</div>
+      <div class="lbl">Indikasi berat (Psl 11)</div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   RENDER: TABLE
+   ============================================================ */
+function getFiltered(){
+  let rows = DATA.filter(d=>{
+    if(state.jabatan && d.jabatan !== state.jabatan) return false;
+    if(state.status && classifyGabungan(d).tingkat !== state.status) return false;
+    if(state.search){
+      const s = state.search.toLowerCase();
+      if(!d.nama.toLowerCase().includes(s) && !d.nip.includes(s)) return false;
+    }
+    return true;
+  });
+  rows.sort((a,b)=>{
+    let av, bv;
+    if(state.sortKey==='status'){ av = severityRank(classifyGabungan(a)); bv = severityRank(classifyGabungan(b)); }
+    else if(state.sortKey==='nama'){ av=a.nama; bv=b.nama; }
+    else { av=a[state.sortKey]; bv=b[state.sortKey]; }
+    if(typeof av === 'string') return state.sortDir==='asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    return state.sortDir==='asc' ? av-bv : bv-av;
+  });
+  return rows;
+}
+
+function renderTable(){
+  const rows = getFiltered();
+  document.getElementById('resultCount').textContent = `${rows.length} dari ${DATA.length} pegawai`;
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = rows.map(d=>{
+    const c = classifyGabungan(d);
+    const colorVar = c.tingkat==='ringan'?'amber':c.tingkat==='sedang'?'orange':c.tingkat==='berat'?'red':null;
+    const alpaStyle = (c.sumber==='alpa' && colorVar) ? `font-weight:700;color:var(--${colorVar})` : '';
+    const terlambatStyle = (c.sumber==='keterlambatan' && colorVar) ? `font-weight:700;color:var(--${colorVar})` : '';
+    const tip = c.sumber==='keterlambatan'
+      ? `Status berdasarkan keterlambatan: ${d.terlambat_menit} menit ≈ ${c.hariTerlambatSetara} hari setara (450 menit/hari)`
+      : `Status berdasarkan Alpa: ${d.A} hari`;
+    return `<tr>
+      <td class="num-cell">${d.no}</td>
+      <td class="name-cell">${d.nama}<span class="jab">${titleCase(d.jabatan)} · <span class="nip">${d.nip}</span></span></td>
+      <td class="num-cell">${d.H}</td>
+      <td class="num-cell" style="${alpaStyle}">${d.A}</td>
+      <td class="num-cell">${d.T}</td>
+      <td class="num-cell" style="${terlambatStyle}">${d.terlambat_menit}</td>
+      <td><span class="status-pill ${c.tingkat}" title="${tip}">${signSVG(c.tingkat)}${c.label}${c.tier?tierRoman(c.tier):''}</span></td>
+      <td><button class="btn-detail" data-nip="${d.nip}">Rincian</button></td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('.btn-detail').forEach(btn=>{
+    btn.addEventListener('click', ()=> openDetail(btn.dataset.nip));
+  });
+}
+function tierRoman(t){ return t===1?' · I':t===2?' · II':t===3?' · III':''; }
+function titleCase(s){ return s.replace(/\w\S*/g, t=> t.charAt(0)+t.substr(1).toLowerCase()); }
+
+/* sorting via header click */
+document.querySelectorAll('thead th[data-k]').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const k = th.dataset.k;
+    if(state.sortKey===k){ state.sortDir = state.sortDir==='asc'?'desc':'asc'; }
+    else { state.sortKey=k; state.sortDir='desc'; }
+    document.querySelectorAll('thead th').forEach(x=>x.classList.remove('sorted'));
+    th.classList.add('sorted');
+    renderTable();
+  });
+});
+
+/* filters */
+document.getElementById('search').addEventListener('input', e=>{ state.search=e.target.value; renderTable(); });
+document.getElementById('filterJabatan').addEventListener('change', e=>{ state.jabatan=e.target.value; renderTable(); });
+document.getElementById('filterStatus').addEventListener('change', e=>{ state.status=e.target.value; renderTable(); });
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  state = { search:'', jabatan:'', status:'', sortKey:'A', sortDir:'desc' };
+  document.getElementById('search').value='';
+  document.getElementById('filterJabatan').value='';
+  document.getElementById('filterStatus').value='';
+  renderTable();
+});
+
+/* ============================================================
+   DETAIL MODAL
+   ============================================================ */
+function openDetail(nip){
+  const d = DATA.find(x=>x.nip===nip);
+  if(!d) return;
+  currentPegawai = d;
+  const c = classifyGabungan(d);
+  document.getElementById('mNama').textContent = d.nama;
+  document.getElementById('mMeta').textContent = `${titleCase(d.jabatan)} · NIP ${d.nip}`;
+
+  let consecNote = '';
+  if(d.A>=10){
+    consecNote = `<div class="note-box">ℹ Rekap ini hanya berisi akumulasi bulanan, sehingga pola <strong>10 hari kerja tidak masuk secara terus-menerus</strong> (Pasal 11 huruf n angka 2 — kategori berat) tidak dapat dideteksi otomatis. Jika Alpa pegawai ini terjadi berturut-turut, periksa data harian sebelum menetapkan tingkat hukuman.</div>`;
+  }
+
+  const basisLine = c.sumber==='keterlambatan'
+    ? `Dasar status: <strong>akumulasi keterlambatan</strong> — ${d.terlambat_menit} menit ≈ <strong>${c.hariTerlambatSetara} hari setara</strong> (konversi 450 menit = 1 hari) — lebih berat dibanding Alpa (${c.cAlpa.label}, ${d.A} hari).`
+    : `Dasar status: <strong>akumulasi Alpa</strong> — ${d.A} hari (Keterlambatan ${d.terlambat_menit} menit ≈ ${c.hariTerlambatSetara} hari setara, kategori ${c.cTerlambat.label.toLowerCase()} — tidak lebih berat dari Alpa).`;
+
+  document.getElementById('mBody').innerHTML = `
+    <div class="status-banner ${c.tingkat}">
+      ${signSVG(c.tingkat, 'lg')}
+      <div>
+        <div class="t1">${c.label}${c.tier?' — Tingkat '+tierRoman(c.tier).replace(' · ',''):''}: ${c.sanksi}</div>
+        <div class="t2">${basisLine}</div>
+        <div class="t2" style="margin-top:4px;">Dasar hukum: ${c.pasal} jo. Pasal 5 huruf f dan Pasal 8 PerBup Karanganyar No. 32 Tahun 2023${c.sumber==='keterlambatan'?' (ambang diterapkan analogis terhadap ekivalen hari keterlambatan — bukan tertulis eksplisit dalam PerBup)':''}.</div>
+      </div>
+    </div>
+
+    <div class="section-title">Rekap Kehadiran Jan–Jun 2026</div>
+    <div class="stat-grid">
+      <div class="stat-box ${d.A>0?'flag':''}"><div class="v">${d.H}</div><div class="k">Hadir</div></div>
+      <div class="stat-box ${d.A>0?'flag':''}"><div class="v">${d.A}</div><div class="k">Alpa</div></div>
+      <div class="stat-box"><div class="v">${d.C}</div><div class="k">Cuti</div></div>
+      <div class="stat-box"><div class="v">${d.S}</div><div class="k">Sakit</div></div>
+      <div class="stat-box"><div class="v">${d.I}</div><div class="k">Ijin</div></div>
+      <div class="stat-box"><div class="v">${d.WFH}</div><div class="k">WFH</div></div>
+      <div class="stat-box"><div class="v">${d.DL}</div><div class="k">Dinas Luar</div></div>
+      <div class="stat-box"><div class="v">${d.DLDD}</div><div class="k">DLDD</div></div>
+      <div class="stat-box"><div class="v">${d.TK}</div><div class="k">Tugas Khusus</div></div>
+      <div class="stat-box"><div class="v">${d.T}</div><div class="k">Terlambat (hr)</div></div>
+      <div class="stat-box"><div class="v">${d.PC}</div><div class="k">P.Cepat (hr)</div></div>
+      <div class="stat-box"><div class="v">${d.TAP}</div><div class="k">Tdk Absen Plg</div></div>
+    </div>
+    <div class="note-box" style="margin-bottom:20px;">Total menit keterlambatan: <strong>${d.terlambat_menit} menit</strong> ≈ <strong>${c.hariTerlambatSetara} hari setara</strong> (450 menit = 1 hari) → kategori ${c.cTerlambat.label}. Total menit pulang cepat: <strong>${d.pulang_cepat_menit} menit</strong> (di luar cakupan konversi ini, untuk bahan pembinaan/evaluasi kinerja).</div>
+    ${consecNote}
+
+    <div class="section-title">Buat Dokumen Administratif</div>
+    <div class="doclist" id="docList"></div>
+  `;
+  renderDocList(c);
+  document.getElementById('overlay').classList.add('show');
+}
+
+function renderDocList(c){
+  const needsTim = c.tingkat==='sedang' || c.tingkat==='berat';
+  const disabledIfAman = c.tingkat==='aman';
+  const docs = [
+    {key:'panggilan', name:'Surat Panggilan I/II', sub:'Lampiran I — pemanggilan pegawai untuk diperiksa', disabled:disabledIfAman},
+    {key:'timpemeriksa', name:'Pembentukan Tim Pemeriksa', sub: needsTim ? 'Lampiran III — wajib (berat) / dapat dibentuk (sedang)' : 'Hanya untuk ancaman sedang/berat', disabled: disabledIfAman || !needsTim},
+    {key:'ba', name:'Berita Acara Pemeriksaan', sub:'Lampiran II — hasil pemeriksaan disiplin', disabled:disabledIfAman},
+    {key:'laporan', name:'Laporan Hasil Pemeriksaan', sub:'Lampiran IV — laporan kepada pejabat berwenang menghukum', disabled:disabledIfAman},
+    {key:'keputusan', name:'Keputusan Penjatuhan Hukuman Disiplin', sub:'Lampiran V — '+ (disabledIfAman?'tidak berlaku, tidak ada pelanggaran':c.sanksi), disabled:disabledIfAman},
+  ];
+  document.getElementById('docList').innerHTML = docs.map(x=>`
+    <div class="doc-item ${x.disabled?'disabled':''}" data-doc="${x.key}">
+      <div><div class="dname">${x.name}</div><div class="dsub">${x.sub}</div></div>
+      <div class="darrow">${x.disabled?'':'→'}</div>
+    </div>
+  `).join('');
+  document.querySelectorAll('.doc-item').forEach(el=>{
+    if(el.classList.contains('disabled')) return;
+    el.addEventListener('click', ()=> openDocGenerator(el.dataset.doc, c));
+  });
+}
+
+document.getElementById('closeModal').addEventListener('click', ()=>{
+  document.getElementById('overlay').classList.remove('show');
+});
+document.getElementById('overlay').addEventListener('click', (e)=>{
+  if(e.target.id==='overlay') document.getElementById('overlay').classList.remove('show');
+});
+
+/* ============================================================
+   DOCUMENT GENERATOR
+   ============================================================ */
+let currentDocKey = null;
+let currentClass = null;
+
+const DOC_TITLES = {
+  panggilan:'Surat Panggilan',
+  timpemeriksa:'Pembentukan Tim Pemeriksa',
+  ba:'Berita Acara Pemeriksaan',
+  laporan:'Laporan Hasil Pemeriksaan',
+  keputusan:'Keputusan Penjatuhan Hukuman Disiplin'
+};
+
+/* setiap ...isi disini... yang muncul di badan dokumen punya kolom edit di sini */
+const COMMON_FIELDS = [
+  {id:'nomor', label:'Nomor Surat / Keputusan', ph:'Contoh: 800/___/____'},
+  {id:'tanggal', label:'Tanggal Dokumen', ph:'Contoh: 14 Juli 2026'},
+  {id:'tempat', label:'Tempat Ditetapkan', def:'Karanganyar'},
+  {id:'bidang', label:'Bidang / Unit Kerja', def:'Bidang Bina Marga'},
+  {id:'atasanNama', label:'Nama Atasan Langsung / Ketua Tim', ph:'Nama atasan langsung'},
+  {id:'atasanNip', label:'NIP Atasan Langsung', ph:'NIP atasan langsung'},
+  {id:'atasanJabatan', label:'Jabatan Atasan Langsung', def:'Kepala Bidang Bina Marga'},
+];
+
+const EXTRA_FIELDS = {
+  panggilan: [
+    {id:'hariTanggalPeriksa', label:'Hari, Tanggal Pemeriksaan', ph:'Contoh: Senin, 20 Juli 2026'},
+    {id:'jamPeriksa', label:'Jam Pemeriksaan', ph:'Contoh: 09.00 WIB'},
+    {id:'tempatPeriksa', label:'Tempat Pemeriksaan', ph:'Contoh: Ruang Kabid Bina Marga'},
+  ],
+  timpemeriksa: [
+    {id:'pengawasNama', label:'Nama — Unsur Pengawasan'},
+    {id:'pengawasNip', label:'NIP — Unsur Pengawasan'},
+    {id:'kepegawaianNama', label:'Nama — Unsur Kepegawaian'},
+    {id:'kepegawaianNip', label:'NIP — Unsur Kepegawaian'},
+    {id:'pejabatLainNama', label:'Nama — Pejabat Lain yang Ditunjuk'},
+    {id:'pejabatLainNip', label:'NIP — Pejabat Lain yang Ditunjuk'},
+    {id:'penetapNama', label:'Nama PPK / Pejabat yang Menetapkan'},
+    {id:'penetapNip', label:'NIP PPK / Pejabat yang Menetapkan'},
+  ],
+  ba: [
+    {id:'hariPeriksa', label:'Hari Pemeriksaan', ph:'Contoh: Senin'},
+    {id:'tglPeriksa', label:'Tanggal (angka)', ph:'Contoh: 20'},
+    {id:'bulanPeriksa', label:'Bulan Pemeriksaan', ph:'Contoh: Juli'},
+    {id:'suratPerintah', label:'Dasar Surat Perintah (jika ada)'},
+    {id:'pertanyaan1', label:'Pertanyaan 1'},
+    {id:'jawaban1', label:'Jawaban 1'},
+    {id:'pertanyaan2', label:'Pertanyaan 2'},
+    {id:'jawaban2', label:'Jawaban 2'},
+  ],
+  laporan: [
+    {id:'hariLapor', label:'Hari Pelaporan'},
+    {id:'tanggalLapor', label:'Tanggal Pelaporan (angka)'},
+    {id:'kepadaJabatan', label:'Ditujukan Kepada (Jabatan)', def:'Kepala Dinas Pekerjaan Umum dan Penataan Ruang Kabupaten Karanganyar'},
+    {id:'memberatkan', label:'Faktor Memberatkan'},
+    {id:'meringankan', label:'Faktor Meringankan'},
+    {id:'dampak', label:'Dampak Perbuatan'},
+    {id:'kewenangan', label:'Kewenangan Menjatuhkan Hukuman (Pejabat)'},
+  ],
+  keputusan: [
+    {id:'baNomor', label:'Nomor Berita Acara Pemeriksaan'},
+    {id:'pertimbanganC', label:'Pertimbangan Tambahan (huruf c)'},
+    {id:'penetapNama', label:'Nama Pejabat Penetap Keputusan'},
+    {id:'penetapNip', label:'NIP Pejabat Penetap Keputusan'},
+    {id:'penetapJabatan', label:'Jabatan Pejabat Penetap Keputusan', def:'Kepala Dinas Pekerjaan Umum dan Penataan Ruang Kabupaten Karanganyar'},
+  ],
+};
+
+function fieldsFor(key){ return COMMON_FIELDS.concat(EXTRA_FIELDS[key]||[]); }
+
+function openDocGenerator(key, c){
+  currentDocKey = key; currentClass = c;
+  document.getElementById('overlay').classList.remove('show');
+  document.getElementById('dTitle').textContent = DOC_TITLES[key];
+  document.getElementById('dMeta').textContent = `Untuk ${currentPegawai.nama} — lengkapi setiap kolom di bawah, pratinjau diperbarui otomatis.`;
+
+  const fields = fieldsFor(key);
+  document.getElementById('dForm').innerHTML = `<div class="formrow">` + fields.map(f=>`
+      <div><label>${f.label}</label><input id="f_${f.id}" placeholder="${f.ph||''}" value="${f.def||''}"></div>
+    `).join('') + `</div>`;
+  fields.forEach(f=> document.getElementById('f_'+f.id).addEventListener('input', renderDocSheet));
+  renderDocSheet();
+  document.getElementById('overlayDoc').classList.add('show');
+}
+
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function V(id){ const el=document.getElementById('f_'+id); return el ? el.value.trim() : ''; }
+function disp(id){ const v=V(id); return v.length ? escapeHtml(v) : `<span class="fillable" data-field="${id}"></span>`; }
+function unitKerjaText(){
+  const b = V('bidang');
+  return 'Dinas Pekerjaan Umum dan Penataan Ruang (DPUPR) Kabupaten Karanganyar — ' + (b.length ? escapeHtml(b) : 'Bidang Bina Marga');
+}
+
+function fv_pelanggaranText(c, d){
+  if(c.sumber==='keterlambatan'){
+    return `tidak menaati ketentuan jam kerja (keterlambatan masuk kerja) secara kumulatif setara ${c.hariTerlambatSetara} hari kerja (akumulasi ${d.terlambat_menit} menit, konversi 450 menit = 1 hari)`;
+  }
+  return `tidak masuk kerja tanpa alasan yang sah secara kumulatif selama ${d.A} hari kerja`;
+}
+
+function renderDocSheet(){
+  const d = currentPegawai, c = currentClass;
+  let html = '';
+  const kop = `<div class="kop"><div class="k1">RAHASIA</div></div>`;
+
+  if(currentDocKey==='panggilan'){
+    html = `
+      ${kop}
+      <h3>SURAT PANGGILAN I/II</h3>
+      <div class="center">NOMOR: ${disp('nomor')}</div>
+      <p>Bersama ini diminta dengan hormat kehadiran Saudara:</p>
+      <table class="fld">
+        <tr><td class="lbl">Nama</td><td>: ${d.nama}</td></tr>
+        <tr><td class="lbl">NI PPPK</td><td>: ${d.nip}</td></tr>
+        <tr><td class="lbl">Jabatan</td><td>: ${titleCase(d.jabatan)}</td></tr>
+        <tr><td class="lbl">Unit Kerja</td><td>: ${unitKerjaText()}</td></tr>
+      </table>
+      <p>Untuk menghadap kepada:</p>
+      <table class="fld">
+        <tr><td class="lbl">Nama</td><td>: ${disp('atasanNama')}</td></tr>
+        <tr><td class="lbl">NIP</td><td>: ${disp('atasanNip')}</td></tr>
+        <tr><td class="lbl">Jabatan</td><td>: ${disp('atasanJabatan')}</td></tr>
+        <tr><td class="lbl">Hari/Tanggal</td><td>: ${disp('hariTanggalPeriksa')}</td></tr>
+        <tr><td class="lbl">Jam</td><td>: ${disp('jamPeriksa')}</td></tr>
+        <tr><td class="lbl">Tempat</td><td>: ${disp('tempatPeriksa')}</td></tr>
+      </table>
+      <p>Untuk diperiksa/diminta keterangan sehubungan dengan dugaan pelanggaran disiplin berupa <strong>${fv_pelanggaranText(c,d)} dalam tahun berjalan</strong>, sebagaimana dimaksud dalam Pasal 5 huruf f jo. ${c.pasal} Peraturan Bupati Karanganyar Nomor 32 Tahun 2023 tentang Disiplin Pegawai Pemerintah dengan Perjanjian Kerja.</p>
+      <p>Demikian untuk dilaksanakan.</p>
+      <div class="sig">
+        <div class="place">${disp('tempat')}, ${disp('tanggal')}<br>Atasan Langsung/Ketua Tim Pemeriksa</div>
+        <div>Nama: ${disp('atasanNama')}<br>NIP: ${disp('atasanNip')}</div>
+      </div>
+    `;
+  }
+
+  if(currentDocKey==='timpemeriksa'){
+    html = `
+      ${kop}
+      <h3>PEMBENTUKAN TIM PEMERIKSA</h3>
+      <div class="center">NOMOR: ${disp('nomor')}</div>
+      <ol>
+        <li>Berdasarkan dugaan pelanggaran disiplin yang dilakukan oleh Sdr. ${d.nama}, NIP ${d.nip}, Jabatan ${titleCase(d.jabatan)}, maka perlu dilakukan pemeriksaan.</li>
+        <li>Mengingat ancaman hukumannya berupa Hukuman Disiplin ${c.tingkat==='berat'?'berat':'sedang'}, maka perlu membentuk Tim Pemeriksa yang terdiri dari:
+          <table class="fld indent">
+            <tr><td class="lbl">a. Atasan langsung</td><td>: ${disp('atasanNama')} / NIP ${disp('atasanNip')}</td></tr>
+            <tr><td class="lbl">b. Unsur pengawasan</td><td>: ${disp('pengawasNama')} / NIP ${disp('pengawasNip')}</td></tr>
+            <tr><td class="lbl">c. Unsur kepegawaian</td><td>: ${disp('kepegawaianNama')} / NIP ${disp('kepegawaianNip')}</td></tr>
+            <tr><td class="lbl">d. Pejabat lain yang ditunjuk</td><td>: ${disp('pejabatLainNama')} / NIP ${disp('pejabatLainNip')}</td></tr>
+          </table>
+        </li>
+      </ol>
+      <p>Demikian untuk dilaksanakan sebagaimana mestinya.</p>
+      <div class="sig">
+        <div class="place">${disp('tempat')}, ${disp('tanggal')}<br>PPK/Pejabat yang ditunjuk</div>
+        <div>Nama: ${disp('penetapNama')}<br>NIP: ${disp('penetapNip')}</div>
+      </div>
+    `;
+  }
+
+  if(currentDocKey==='ba'){
+    html = `
+      ${kop}
+      <h3>BERITA ACARA PEMERIKSAAN</h3>
+      <div class="center">NOMOR: ${disp('nomor')}</div>
+      <p>Pada hari ini ${disp('hariPeriksa')}, tanggal ${disp('tglPeriksa')}, bulan ${disp('bulanPeriksa')}, tahun 2026, saya/Tim Pemeriksa masing-masing:</p>
+      <table class="fld">
+        <tr><td class="lbl">1. Nama</td><td>: ${disp('atasanNama')}</td></tr>
+        <tr><td class="lbl">NIP</td><td>: ${disp('atasanNip')}</td></tr>
+        <tr><td class="lbl">Jabatan</td><td>: ${disp('atasanJabatan')}</td></tr>
+      </table>
+      <p>berdasarkan wewenang yang ada pada saya/Surat Perintah ${disp('suratPerintah')} telah melakukan pemeriksaan terhadap:</p>
+      <table class="fld">
+        <tr><td class="lbl">Nama</td><td>: ${d.nama}</td></tr>
+        <tr><td class="lbl">NI PPPK</td><td>: ${d.nip}</td></tr>
+        <tr><td class="lbl">Jabatan</td><td>: ${titleCase(d.jabatan)}</td></tr>
+        <tr><td class="lbl">Unit Kerja</td><td>: ${unitKerjaText()}</td></tr>
+      </table>
+      <p>karena yang bersangkutan diduga telah melakukan pelanggaran terhadap ketentuan Pasal 5 huruf f, ${c.pasal}, Peraturan Bupati Karanganyar Nomor 32 Tahun 2023 tentang Disiplin Pegawai Pemerintah dengan Perjanjian Kerja, yaitu <strong>${fv_pelanggaranText(c,d)}</strong> dalam tahun berjalan (rekap Januari–Juni 2026).</p>
+      <ol>
+        <li>Pertanyaan: ${disp('pertanyaan1')}<br>Jawaban: ${disp('jawaban1')}</li>
+        <li>Pertanyaan: ${disp('pertanyaan2')}<br>Jawaban: ${disp('jawaban2')}</li>
+        <li>dst.</li>
+      </ol>
+      <p>Demikian Berita Acara Pemeriksaan ini dibuat untuk dapat digunakan sebagaimana mestinya.</p>
+      <div class="sig">
+        <table class="fld"><tr>
+          <td style="width:50%;">
+            Yang diperiksa:<br><br><br>
+            Nama: ${d.nama}<br>NIP: ${d.nip}<br>Tanda tangan: ______________
+          </td>
+          <td>
+            Pejabat Pemeriksa:<br><br><br>
+            Nama: ${disp('atasanNama')}<br>NIP: ${disp('atasanNip')}<br>Tanda tangan: ______________
+          </td>
+        </tr></table>
+      </div>
+    `;
+  }
+
+  if(currentDocKey==='laporan'){
+    html = `
+      ${kop}
+      <table class="fld"><tr><td style="width:60%;">
+        Nomor: ${disp('nomor')}<br>Lampiran: Satu berkas<br>Perihal: Laporan Hasil Pemeriksaan Terkait Adanya Dugaan Pelanggaran Disiplin
+      </td><td>
+        Kepada Yth.<br>${disp('kepadaJabatan')}<br>di ${disp('tempat')}
+      </td></tr></table>
+      <p>Dengan ini dilaporkan dengan hormat, bahwa berdasarkan hasil pemeriksaan pada hari ${disp('hariLapor')}, tanggal ${disp('tanggalLapor')}, saya/Tim Pemeriksa telah melakukan pemeriksaan terhadap:</p>
+      <table class="fld">
+        <tr><td class="lbl">Nama</td><td>: ${d.nama}</td></tr>
+        <tr><td class="lbl">NI PPPK</td><td>: ${d.nip}</td></tr>
+        <tr><td class="lbl">Jabatan</td><td>: ${titleCase(d.jabatan)}</td></tr>
+        <tr><td class="lbl">Unit Kerja</td><td>: ${unitKerjaText()}</td></tr>
+      </table>
+      <p>Berdasarkan hasil pemeriksaan, dapat dilaporkan sebagai berikut:</p>
+      <table class="fld" style="border:1px solid #ccc;">
+        <tr style="border-bottom:1px solid #ccc;"><td class="lbl" style="border:1px solid #ccc;">Bentuk Pelanggaran</td><td style="border:1px solid #ccc;">${fv_pelanggaranText(c,d).charAt(0).toUpperCase()+fv_pelanggaranText(c,d).slice(1)} (Pasal 5 huruf f)</td></tr>
+        <tr><td class="lbl" style="border:1px solid #ccc;">Waktu</td><td style="border:1px solid #ccc;">Januari–Juni 2026</td></tr>
+        <tr><td class="lbl" style="border:1px solid #ccc;">Tempat</td><td style="border:1px solid #ccc;">${unitKerjaText()}</td></tr>
+        <tr><td class="lbl" style="border:1px solid #ccc;">Faktor Memberatkan</td><td style="border:1px solid #ccc;">${disp('memberatkan')}</td></tr>
+        <tr><td class="lbl" style="border:1px solid #ccc;">Faktor Meringankan</td><td style="border:1px solid #ccc;">${disp('meringankan')}</td></tr>
+        <tr><td class="lbl" style="border:1px solid #ccc;">Dampak Perbuatan</td><td style="border:1px solid #ccc;">${disp('dampak')}</td></tr>
+      </table>
+      <ol>
+        <li>Yang bersangkutan terbukti melakukan pelanggaran disiplin ${fv_pelanggaranText(c,d)}, sehingga direkomendasikan untuk dijatuhi Hukuman Disiplin ${c.label.toLowerCase()} berupa <strong>${c.sanksi}</strong> (${c.pasal}).</li>
+        <li>Kewenangan untuk menjatuhkan Hukuman Disiplin kepada PPPK tersebut di atas merupakan kewenangan ${disp('kewenangan')}.</li>
+      </ol>
+      <p>Sehubungan dengan hal tersebut, disampaikan hasil pemeriksaan terhadap PPPK yang bersangkutan untuk digunakan dalam penetapan keputusan penjatuhan Hukuman Disiplin.</p>
+      <div class="sig">
+        Yang melaporkan (Atasan langsung/Ketua Tim Pemeriksa),<br><br><br>
+        Nama: ${disp('atasanNama')}<br>NIP: ${disp('atasanNip')}
+      </div>
+    `;
+  }
+
+  if(currentDocKey==='keputusan'){
+    const judul = c.sanksi.toUpperCase();
+    html = `
+      ${kop}
+      <h3>KEPUTUSAN<br>NOMOR: ${disp('nomor')}<br>TENTANG<br>${judul}</h3>
+      <div class="center">DENGAN RAHMAT TUHAN YANG MAHA ESA<br>${disp('penetapJabatan')}</div>
+      <p><strong>Menimbang:</strong></p>
+      <ol type="a">
+        <li>bahwa berdasarkan Berita Acara Hasil Pemeriksaan Nomor ${disp('baNomor')}, Sdr. ${d.nama}, NI PPPK ${d.nip}, Jabatan ${titleCase(d.jabatan)}, telah terbukti melakukan perbuatan berupa ${fv_pelanggaranText(c,d)} dalam tahun berjalan;</li>
+        <li>bahwa perbuatan tersebut merupakan pelanggaran terhadap ketentuan Pasal 5 huruf f, ${c.pasal}, Peraturan Bupati Karanganyar Nomor 32 Tahun 2023;</li>
+        <li>${disp('pertimbanganC')};</li>
+        <li>bahwa untuk menegakkan disiplin, perlu menjatuhkan hukuman disiplin yang setimpal dengan pelanggaran disiplin yang dilakukan;</li>
+        <li>bahwa berdasarkan pertimbangan sebagaimana dimaksud dalam huruf a, huruf b, huruf c, dan huruf d perlu menetapkan Keputusan tentang Penjatuhan Hukuman Disiplin ${judul} atas nama ${d.nama}.</li>
+      </ol>
+      <p><strong>Mengingat:</strong></p>
+      <ol>
+        <li>Undang-Undang Nomor 5 Tahun 2014 tentang Aparatur Sipil Negara;</li>
+        <li>Peraturan Pemerintah Nomor 49 Tahun 2018 tentang Manajemen Pegawai Pemerintah dengan Perjanjian Kerja;</li>
+        <li>Peraturan Bupati Karanganyar Nomor 32 Tahun 2023 tentang Disiplin Pegawai Pemerintah dengan Perjanjian Kerja;</li>
+        <li>Keputusan Kepala Badan Kepegawaian dan Pengembangan Sumber Daya Manusia Nomor 860/28 Tahun 2023 tentang Petunjuk Teknis PerBup Karanganyar Nomor 32 Tahun 2023.</li>
+      </ol>
+      <p><strong>MEMUTUSKAN:</strong></p>
+      <table class="fld">
+        <tr><td class="lbl">Menetapkan:</td><td></td></tr>
+        <tr><td class="lbl">KESATU</td><td>: Menjatuhkan Hukuman Disiplin berupa <strong>${c.sanksi}</strong> kepada:
+          <table class="fld indent">
+            <tr><td class="lbl">Nama</td><td>: ${d.nama}</td></tr>
+            <tr><td class="lbl">NI PPPK</td><td>: ${d.nip}</td></tr>
+            <tr><td class="lbl">Jabatan</td><td>: ${titleCase(d.jabatan)}</td></tr>
+            <tr><td class="lbl">Unit Kerja</td><td>: ${unitKerjaText()}</td></tr>
+          </table>
+          karena yang bersangkutan telah melakukan perbuatan yang melanggar ketentuan Pasal 5 huruf f, ${c.pasal}, Peraturan Bupati Karanganyar Nomor 32 Tahun 2023.
+        </td></tr>
+        <tr><td class="lbl">KEDUA</td><td>: Keputusan ini mulai berlaku pada hari kerja ke-15 (lima belas) terhitung mulai tanggal PPPK yang bersangkutan menerima keputusan ini.</td></tr>
+        <tr><td class="lbl">KETIGA</td><td>: Keputusan ini disampaikan kepada yang bersangkutan untuk dilaksanakan sebagaimana mestinya.</td></tr>
+      </table>
+      <div class="sig">
+        <div class="place">Ditetapkan di: ${disp('tempat')}<br>Pada tanggal: ${disp('tanggal')}</div>
+        <div>${disp('penetapJabatan')}<br><br><br>Nama: ${disp('penetapNama')}<br>NIP: ${disp('penetapNip')}</div>
+      </div>
+      <p style="font-size:11px;color:#666;">Tembusan: 1. Bupati Karanganyar; 2. Kepala BKPSDM; 3. Pejabat lain yang dianggap perlu.</p>
+    `;
+  }
+
+  document.getElementById('docsheet').innerHTML = html;
+}
+
+document.getElementById('closeDocModal').addEventListener('click', ()=>{
+  document.getElementById('overlayDoc').classList.remove('show');
+});
+document.getElementById('overlayDoc').addEventListener('click', (e)=>{
+  if(e.target.id==='overlayDoc') document.getElementById('overlayDoc').classList.remove('show');
+});
+document.getElementById('backToDetail').addEventListener('click', ()=>{
+  document.getElementById('overlayDoc').classList.remove('show');
+  document.getElementById('overlay').classList.add('show');
+});
+document.getElementById('printDoc').addEventListener('click', ()=>{
+  const printRoot = document.getElementById('printRoot');
+  const sheet = document.getElementById('docsheet');
+  // bungkus salinan konten dokumen dalam .docsheet baru yang berdiri sendiri (bebas dari sisa layout dashboard)
+  printRoot.innerHTML = '<div class="docsheet">' + sheet.innerHTML + '</div>';
+  // kosongkan judul dokumen sementara agar header cetak bawaan browser tidak menampilkan nama aplikasi
+  window.__origTitle = document.title;
+  document.title = ' ';
+  window.print();
+});
+window.addEventListener('afterprint', ()=>{
+  document.getElementById('printRoot').innerHTML = '';
+  if(window.__origTitle !== undefined){ document.title = window.__origTitle; }
+});
+
+/* data bar actions */
+document.getElementById('btnDownload').addEventListener('click', handleDownload);
+document.getElementById('btnUploadTrigger').addEventListener('click', ()=>{
+  document.getElementById('fileUpload').click();
+});
+document.getElementById('fileUpload').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(file) handleFileUpload(file);
+  e.target.value = '';
+});
+/* ============================================================
+   INIT
+   ============================================================ */
+updateDataStatusText();
+renderCards();
+renderTable();
+</script>
+</body>
+</html>
